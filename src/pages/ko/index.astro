@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="홈"
+  description="앵무새 브리딩과 소프트웨어 엔지니어링의 융합의 과정을 기록하는 Naviary 테크 블로그입니다."
+>
+  <main class="max-w-4xl mx-auto py-20 px-6">
+    <section class="mb-20">
+      <div
+        class="flex items-center gap-2 text-primary font-mono text-sm tracking-widest uppercase mb-4"
+      >
+        <span class="material-symbols-outlined text-sm">terminal</span>
+        <span>Engineering for Parrots & Software</span>
+      </div>
+
+      <h1 class="text-6xl font-black tracking-tight mb-6">
+        Naviary <span class="text-primary">DevLog</span>
+      </h1>
+
+      <p class="text-zinc-400 text-xl leading-relaxed max-w-2xl">
+        반갑습니다. <span class="text-zinc-100 font-medium">황창환</span>입니다. <br
+        />
+        앵무새 브리딩 아키텍처와 분산 시스템 설계를 연구하며 기록합니다.
+      </p>
+    </section>
+
+    <section class="grid gap-8">
+      <div class="p-8 border border-zinc-800 rounded-2xl bg-zinc-900/30">
+        <h2
+          class="text-zinc-500 text-xs uppercase tracking-tighter mb-4 font-mono"
+        >
+          Font Test
+        </h2>
+
+        <p class="text-2xl mb-6">
+          이 문장은 <span class="font-bold text-primary">Pretendard Subset</span
+          >으로 렌더링됩니다. (가독성 체크)
+        </p>
+
+        <div class="space-y-2">
+          <p class="text-sm text-zinc-500 font-mono italic">
+            // Fira Code Ligatures Test
+          </p>
+          <code
+            class="block bg-black p-4 rounded-lg text-sm leading-relaxed border border-zinc-800"
+          >
+            <span class="text-blue-400">const</span>
+            <span class="text-yellow-200">naviary</span> = () <span
+              class="text-purple-400">=&gt;</span
+            > &#123; <br />
+            &nbsp;&nbsp;<span class="text-blue-400">if</span> (status <span
+              class="text-purple-400">!=</span
+            >
+            <span class="text-green-400">'perfect'</span>) <span
+              class="text-blue-400">return</span
+            >
+            <span class="text-red-400">false</span>; <br />
+            &nbsp;&nbsp;<span class="text-blue-400">return</span>
+            <span class="text-red-400">true</span>; <br />
+            &#125;
+          </code>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

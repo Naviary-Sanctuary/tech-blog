@@ -1,0 +1,10 @@
+---
+export const prerender = false;
+
+const acceptLanguage = Astro.request.headers.get("accept-language") || "ko";
+const preferredLanguage = acceptLanguage.toLowerCase().includes("en")
+	? "en"
+	: "ko";
+
+return Astro.redirect(`/${preferredLanguage}/`, 302);
+---
