@@ -1,0 +1,54 @@
+---
+import GithubIcon from "./icons/GithubIcon.astro";
+import RssLink from "./icons/RssLink.astro";
+
+const lang = Astro.currentLocale || "ko";
+const currentPath = Astro.url.pathname;
+const cleanPath = currentPath.replace(/^\/(ko|en)/, "");
+const targetLang = lang === "ko" ? "en" : "ko";
+const targetPath = `/${targetLang}${cleanPath}`;
+---
+
+<header
+  class="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md"
+>
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <a href={`/${lang}/`} class="flex items-center gap-3 group">
+        <div
+          class="size-8 text-primary flex items-center justify-center transition-transform duration-500 group-hover:rotate-180"
+        >
+          <span class="material-symbols-outlined text-[32px]">terminal</span>
+        </div>
+        <h1
+          class="text-zinc-900 dark:text-zinc-100 font-bold text-lg tracking-tight"
+        >
+          DevLog
+        </h1>
+      </a>
+    </div>
+
+    <nav class="hidden md:flex items-center gap-8">
+      <a
+        class="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
+        href={`/${lang}/blog`}>Blog</a
+      >
+      <a
+        class="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
+        href={`/${lang}/series`}>Series</a
+      >
+    </nav>
+
+    <div class="flex items-center gap-4">
+      <a
+        href={targetPath}
+        class="flex items-center justify-center px-3 h-8 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-500 hover:border-primary hover:text-primary transition-all uppercase"
+      >
+        {targetLang}
+      </a>
+
+      <GithubIcon />
+      <RssLink />
+    </div>
+  </div>
+</header>

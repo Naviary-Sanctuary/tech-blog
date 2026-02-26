@@ -1,0 +1,22 @@
+---
+interface Props {
+  className?: string;
+}
+const { className } = Astro.props;
+---
+
+<a
+  href="/rss.xml"
+  target="_blank"
+  class:list={[
+    "text-zinc-500 hover:text-primary transition-colors flex items-center gap-1",
+    className,
+  ]}
+>
+  <svg viewBox="0 0 24 24" fill="currentColor" class="inline-block size-4">
+    <path
+      d="M4 4.44v2.89c8.15 0 14.67 6.52 14.67 14.67h2.89c0-9.74-7.82-17.56-17.56-17.56zm0 5.69v2.89c5.02 0 9.11 4.09 9.11 9.11h2.89c0-6.62-5.38-12-12-12zm2 7.12a2.31 2.31 0 0 0-2.31 2.31c0 1.27 1.03 2.31 2.31 2.31a2.31 2.31 0 0 0 2.31-2.31c0-1.28-1.04-2.31-2.31-2.31z"
+    ></path>
+  </svg>
+  <slot />
+</a>
