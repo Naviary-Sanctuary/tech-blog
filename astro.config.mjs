@@ -15,8 +15,5 @@ export default defineConfig({
       prefixDefaultLocale: true,
       strategy: "prefix",
     },
-    fallback: {
-      en: "ko"
-    }
   }
 });

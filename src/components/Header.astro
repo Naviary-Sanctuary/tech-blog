@@ -1,54 +1,158 @@
 ---
+import { navigationItems } from "../libs/navigation";
 import GithubIcon from "./icons/GithubIcon.astro";
-import RssLink from "./icons/RssLink.astro";
+import RssIcon from "./icons/RssIcon.astro";
+import LanguageSelect from "./LanguageSelect.astro";
 
 const lang = Astro.currentLocale || "ko";
 const currentPath = Astro.url.pathname;
-const cleanPath = currentPath.replace(/^\/(ko|en)/, "");
+const cleanPath = currentPath.replace(/^\/(ko|en)/, "") || "/";
 const targetLang = lang === "ko" ? "en" : "ko";
 const targetPath = `/${targetLang}${cleanPath}`;
+
+const menus = navigationItems.map((item) => {
+  const href = `/${lang}${item.href}`;
+  const title = item.label[lang as keyof typeof item.label] ?? item.label.ko;
+  const isActive =
+    cleanPath === item.href || cleanPath.startsWith(`${item.href}/`);
+
+  return { href, title, isActive };
+});
 ---
 
-<header
-  class="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md"
->
-  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <a href={`/${lang}/`} class="flex items-center gap-3 group">
-        <div
-          class="size-8 text-primary flex items-center justify-center transition-transform duration-500 group-hover:rotate-180"
-        >
-          <span class="material-symbols-outlined text-[32px]">terminal</span>
-        </div>
-        <h1
-          class="text-zinc-900 dark:text-zinc-100 font-bold text-lg tracking-tight"
-        >
-          DevLog
+<header class="sticky top-0 z-50 w-full bg-background">
+  <div class="max-w-5xl mx-auto px-6 h-24 flex items-center justify-between">
+    <!-- logo -->
+    <div class="flex items-center">
+      <a href={`/${lang}/`} class="group">
+        <h1 class="text-zinc-900 font-bold text-xl tracking-tight">
+          Naviary.Tech
         </h1>
       </a>
     </div>
 
-    <nav class="hidden md:flex items-center gap-8">
-      <a
-        class="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
-        href={`/${lang}/blog`}>Blog</a
-      >
-      <a
-        class="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
-        href={`/${lang}/series`}>Series</a
-      >
+    <!-- menu navigation -->
+    <nav class="hidden md:flex items-center gap-10">
+      {
+        menus.map((menu) => (
+          <a
+            href={menu.href}
+            class={`text-[13px] font-medium tracking-wide transition-colors hover:text-primary ${
+              menu.isActive ? "text-primary font-semibold" : "text-zinc-700"
+            }`}
+          >
+            {menu.title}
+          </a>
+        ))
+      }
+      <LanguageSelect currentLanguage={lang} path={cleanPath} />
     </nav>
 
-    <div class="flex items-center gap-4">
+    <div class="md:hidden flex items-center gap-4">
       <a
         href={targetPath}
-        class="flex items-center justify-center px-3 h-8 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-500 hover:border-primary hover:text-primary transition-all uppercase"
+        class="text-[12px] font-bold text-zinc-700 hover:text-primary transition-colors uppercase"
       >
         {targetLang}
       </a>
-
-      <GithubIcon />
-      <RssLink />
+      <button
+        id="mobile-menu-button"
+        class="inline-flex items-center justify-center size-9 rounded-md border border-zinc-200 text-zinc-700 hover:text-primary active:scale-95 transition-all"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <span class="material-symbols-outlined text-[24px]">menu</span>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- Mobile -->
+<nav
+  id="mobile-menu"
+  aria-label="Mobile navigation"
+  class="fixed inset-x-0 top-24 bottom-0 z-40 md:hidden hidden overflow-y-auto border-t border-zinc-200 bg-background shadow-[0_14px_36px_rgba(15,23,42,0.08)]"
+>
+  <div class="max-w-5xl mx-auto w-full px-6 py-8 flex flex-col gap-2">
+    {
+      menus.map((menu) => (
+        <a
+          href={menu.href}
+          class={`px-4 py-3 rounded-xl text-lg font-medium transition-colors ${
+            menu.isActive ? "text-primary" : "text-zinc-700 active:bg-zinc-100"
+          }`}
+        >
+          {menu.title}
+        </a>
+      ))
+    }
+
+    <div class="mt-4 pt-8 border-t border-zinc-200 space-y-8">
+      <div class="flex items-center gap-8 px-2">
+        <a
+          href={`/rss.xml`}
+          class="inline-flex items-center gap-3 text-zinc-700 hover:text-primary transition-colors text-base font-medium"
+        >
+          <RssIcon />
+          <span>RSS Feed</span>
+        </a>
+
+        <a
+          href="https://github.com/naviary-sanctuary"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-3 text-zinc-700 hover:text-primary transition-colors text-base font-medium"
+        >
+          <GithubIcon />
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  function setupHeader() {
+    const mobileButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const mobileIcon = mobileButton?.querySelector(
+      ".material-symbols-outlined",
+    );
+
+    const closeMobileMenu = () => {
+      if (!mobileButton || !mobileMenu || !mobileIcon) return;
+      mobileButton.setAttribute("aria-expanded", "false");
+      mobileMenu.classList.add("hidden");
+      mobileIcon.textContent = "menu";
+      document.body.style.overflow = "";
+    };
+
+    const toggleMobileMenu = () => {
+      if (!mobileButton || !mobileMenu || !mobileIcon) return;
+      const isOpen = mobileButton.getAttribute("aria-expanded") === "true";
+      mobileButton.setAttribute("aria-expanded", String(!isOpen));
+      mobileMenu.classList.toggle("hidden", isOpen);
+      mobileIcon.textContent = isOpen ? "menu" : "close";
+      document.body.style.overflow = isOpen ? "" : "hidden";
+    };
+
+    mobileButton?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleMobileMenu();
+    });
+
+    mobileMenu?.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", closeMobileMenu);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeMobileMenu();
+      }
+    });
+  }
+
+  setupHeader();
+  document.addEventListener("astro:page-load", setupHeader);
+</script>

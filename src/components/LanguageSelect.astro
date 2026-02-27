@@ -1,0 +1,99 @@
+---
+interface Props {
+  path: string;
+  currentLanguage: string;
+}
+
+const { path, currentLanguage } = Astro.props;
+
+const localeOptions = [
+  {
+    code: "ko",
+    label: "한국어",
+    href: `/ko${path}`,
+    isActive: currentLanguage === "ko",
+  },
+  {
+    code: "en",
+    label: "English",
+    href: `/en${path}`,
+    isActive: currentLanguage === "en",
+  },
+] as const;
+---
+
+<div class="relative" id="language-switcher">
+  <button
+    id="language-menu-button"
+    type="button"
+    class="inline-flex h-9 items-center px-2 rounded-full hover:text-primary/70"
+    aria-label="Change language"
+    aria-expanded="false"
+    aria-controls="language-menu"
+  >
+    <span class="text-xs font-semibold tracking-wide"
+      >{currentLanguage === "ko" ? "KR" : "EN"}</span
+    >
+  </button>
+  <div
+    id="language-menu"
+    role="menu"
+    class="hidden absolute right-0 mt-2 w-48 rounded-3xl border border-zinc-700/80 p-2 shadow-[0_20px_44px_rgba(0,0,0,0.55)] backdrop-blur-lg z-50"
+  >
+    {
+      localeOptions.map((option) => (
+        <a
+          href={option.href}
+          role="menuitem"
+          class={`flex items-center justify-between rounded-2xl px-3 py-3 text-base transition-colors ${
+            option.isActive ? "text-primary" : "text-zinc-700"
+          }`}
+        >
+          <span class={option.isActive ? "font-semibold" : ""}>
+            {option.label}
+          </span>
+          <span
+            class={`text-xs font-semibold tracking-[0.14em] ${
+              option.isActive ? "text-primary" : "text-zinc-600"
+            }`}
+          >
+            {option.code.toUpperCase()}
+          </span>
+        </a>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  function setupLanguageSwitcher() {
+    const langSwitcher = document.getElementById("language-switcher");
+    const langButton = document.getElementById("language-menu-button");
+    const langMenu = document.getElementById("language-menu");
+
+    const closeLangMenu = () => {
+      if (!langButton || !langMenu) return;
+      langButton.setAttribute("aria-expanded", "false");
+      langMenu.classList.add("hidden");
+    };
+
+    langButton?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!langButton || !langMenu) return;
+      const isOpen = langButton.getAttribute("aria-expanded") === "true";
+      langButton.setAttribute("aria-expanded", String(!isOpen));
+      langMenu.classList.toggle("hidden", isOpen);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!langSwitcher?.contains(event.target as Node)) closeLangMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeLangMenu();
+    });
+  }
+
+  setupLanguageSwitcher();
+  document.addEventListener("astro:page-load", setupLanguageSwitcher);
+</script>

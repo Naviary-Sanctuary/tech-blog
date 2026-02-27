@@ -2,28 +2,26 @@
 
 @theme {
   --color-primary: #ff781f;
-  --color-background-light: #f8f7f5;
-  --color-background-dark: #050505;
-  --color-surface-dark: #121212;
+  --color-background: #FDFDFFFF;
+  --color-background-footer: #232323;
+  --color-footer: #CCC;
 
   --font-display: "Inter", sans-serif;
   --font-mono: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace";
 }
 
-:root {
-  color-scheme: dark;
-}
-
 @layer base {
-  .dark {
-    @apply bg-[var(--color-background-dark)] text-zinc-100;
-  }
 
-  html:not(.dark) {
-    @apply bg-[var(--color-background-light)] text-zinc-900;
+  html,
+  body {
+    @apply bg-background text-zinc-900;
   }
 
   body {
     @apply font-display antialiased;
+  }
+
+  button {
+    @apply cursor-pointer;
   }
 }

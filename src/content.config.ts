@@ -18,9 +18,12 @@ const blog = defineCollection({
     series: z.string().optional(),
     seriesOrder: z.number().optional(),
 
+    // classification
+    category: z.string(),
+    tags: z.array(z.string()),
+
     // etc
     heroImage: z.string().optional(),
-    tags: z.array(z.string()),
     draft: z.boolean().default(false),
 
   })
