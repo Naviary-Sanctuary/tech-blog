@@ -1,0 +1,630 @@
+---
+title: "To DRY or to WET: Live DRY or Stay WET?"
+description: "When the obsession with perfect abstraction leads to complexity, do we have the courage to choose duplication?"
+date: "2026-02-12"
+category: "ENGINEERING"
+tags: ["DRY", "WET", "Abstraction", "Development Principles", "Naviary"]
+author: "naviary"
+coverImage: "/images/dry-or-wet/caiques-block.jpeg"
+draft: false
+---
+
+![caiques-block](/images/dry-or-wet/caiques-block.jpeg)
+
+## Introduction
+
+Developers have a certain instinct. When they spot code duplication, they feel an immediate urge to abstract it. When the same pattern repeats, their fingers start to itch.
+
+"Should I make this a common component?", "Let's put this in the common folder!", "This needs to be extracted into a utility function!" These exclamations are a very familiar landscape for developers.
+
+The DRY (Don't Repeat Yourself) principle is deeply ingrained in us. Since *The Pragmatic Programmer* introduced this concept, it has been treated as a commandment for developers. Even in code reviews, spotting duplication leads to comments like, "Could we abstract this part?"
+
+But something is strange. Why does your abstracted code keep running into exception cases? Why does the "common" function keep getting more complex?
+
+<div className="text-sm text-gray-500 italic mt-4">
+This article was inspired by Dan Abramov's talk <a href="https://www.deconstructconf.com/2019/dan-abramov-the-wet-codebase" target="_blank" className="underline">"The WET Codebase"</a> and has been reconstructed with practical code examples.
+</div>
+
+## The Sweet Temptation of Abstraction
+
+You've probably experienced this.
+
+It started as a simple discount calculation.
+```typescript
+class Order {
+  ...
+
+  calculateTotal(): number {
+    const discount = this.price * (this.discountRate / 100);
+    return this.price - discount;
+  }
+} 
+
+const order = new Order(50000, 10);
+order.calculateTotal();
+```
+
+A clean domain model. Clear and easy-to-understand business logic. Perfect.
+
+A week later, in a meeting, the product manager says:
+
+"VIP members should get an additional discount. And I think we need to apply coupons too..."
+
+```typescript
+class Order {
+  ...
+
+  calculateTotal(): number {
+    let discount = this.price * (this.discountRate / 100);
+
+    if (this.isVip()) {
+      discount += this.price * 0.1;
+    }
+
+    if (this.hasCoupon()) {
+      discount += this.coupon.amount;
+    }
+
+    return this.price - discount;
+  }
+}
+```
+
+Still not too bad. A few `if` statements feel a bit uncomfortable, but it's manageable.
+
+Months later, the marketing team comes in with new requirements.
+
+"Black Friday is here! We need seasonal discounts, and certain categories shouldn't have overlapping discounts. Oh, and people should be able to use membership points..."
+
+"Let's abstract it!"
+```typescript
+abstract class DiscountPolicy {
+  abstract calculate(price: number): number;
+}
+
+class RateDiscountPolicy extends DiscountPolicy {
+  constructor(private rate: number) {
+    super();
+  }
+
+  calculate(price: number): number {
+    return price * (this.rate / 100);
+  }
+}
+
+class VipDiscountPolicy extends DiscountPolicy {
+  calculate(price: number): number {
+    return price * 0.2;
+  }
+}
+
+
+class CouponDiscountPolicy extends DiscountPolicy {
+  constructor(private amount: number) {
+    super();
+  }
+  
+  calculate(price: number): number {
+    return this.amount;
+  }
+}
+
+class SeasonalDiscountPolicy extends DiscountPolicy {
+  constructor(
+    private rate: number,
+    private excludedCategories: string[]
+  ) {
+    super();
+  }
+  
+  calculate(price: number, category?: string): number {
+    if (category && this.excludedCategories.includes(category)) {
+      return 0;
+    }
+    return price * (this.rate / 100);
+  }
+}
+
+class Order {
+  constructor(
+    private price: number,
+    private policies: DiscountPolicy[]
+  ) {}
+
+  calculateTotal(): number {
+    const totalDiscount = this.policies
+      .map(policy => policy.calculate(this.price))
+      .reduce((sum, discount) => sum + discount, 0);
+    
+    return this.price - totalDiscount;
+  }
+}
+```
+
+Looks clean! It feels like an extensible structure.
+
+Let's look at how it's used:
+
+```typescript
+const order = new Order(50000, [
+  new RateDiscountPolicy(10),
+  new VipDiscountPolicy(),
+  new CouponDiscountPolicy(5000),
+  new SeasonalDiscountPolicy(20, ['electronics'])
+]);
+
+order.calculateTotal();
+```
+
+Well... it looks a bit messy, but it's okay. At least `Order` itself doesn't need to change when a new policy is added, right? You console yourself with that thought.
+
+But next week, a hotfix is needed.
+
+"Coupons and seasonal discounts cannot be combined! Only the larger of the two should be applied!"
+
+Now dependencies between policies arise.
+```typescript
+enum DiscountStrategy {
+  MAX = 'max',
+  MIN = 'min',
+  SUM = 'sum'
+}
+
+class ConflictingDiscountPolicy extends DiscountPolicy {
+  constructor(
+    private policies: DiscountPolicy[],
+    private strategy: DiscountStrategy
+  ){
+    super()
+  }
+
+  calculate(price: number): number {
+    const discounts = this.policies.map((policy) => policy.calculate(price));
+    
+    return this.adaptStrategy(this.strategy, discounts);
+  }
+
+  adaptStrategy(strategy: DiscountStrategy, discounts: number[]) {
+    switch (strategy) {
+      case DiscountStrategy.MAX:
+        return Math.max(...discounts);
+      case DiscountStrategy.MIN:
+        return Math.min(...discounts);
+      case DiscountStrategy.SUM:
+        return discounts.reduce((sum, discount) => sum + discount, 0);
+    }
+  }
+}
+```
+
+Usage check:
+
+```typescript
+const order = new Order(50000, [
+  new RateDiscountPolicy(10),
+  new VipDiscountPolicy(),
+  new ConflictingDiscountPolicy(
+    [
+      new CouponDiscountPolicy(5000),
+      new SeasonalDiscountPolicy(20, ['electronics']),
+    ],
+    DiscountStrategy.MAX
+  ),
+]);
+```
+
+"We also need to check the maximum discount limit."
+
+The requirements keep expanding.
+
+```typescript
+class MaxDiscountPolicy extends DiscountPolicy {
+    constructor(
+    private innerPolicies: DiscountPolicy[],
+    private maxAmount: number
+  ) {
+    super();
+  }
+  
+  calculate(price: number): number {
+    const total = this.innerPolicies
+      .map(p => p.calculate(price))
+      .reduce((sum, d) => sum + d, 0);
+    return Math.min(total, this.maxAmount);
+  }
+}
+```
+
+Behold:
+
+```typescript
+const order = new Order(50000, [
+  new MaxDiscountPolicy(
+    [
+      new RateDiscountPolicy(10),
+      new VipDiscountPolicy(),
+      new ConflictingDiscountPolicy(
+        [
+          new CouponDiscountPolicy(5000),
+          new SeasonalDiscountPolicy(15, ['electronics']),
+        ],
+        DiscountStrategy.MAX
+      ),
+    ],
+    10000
+  ),
+]);
+
+order.calculateTotal();
+```
+
+Congratulations. Your code is becoming increasingly complex. You feel like you're building a "Discount Framework."
+
+Now, any developer using this must:
+1. Know what policy classes exist.
+2. Know the order in which to combine these policies.
+3. Know which policy should wrap which other policies.
+4. Know what arguments to pass to each policy's constructor.
+
+Is this truly a good design? All that was needed was the `final price`.
+
+Were we solving the problem, or were we just designing a discount framework?
+
+So, what should we have done?
+
+It might not be the single "correct" answer, but there's a way to express business logic explicitly without over-abstraction.
+
+```typescript
+class Order {
+  ...
+
+  calculateTotal(): number {
+    const memberDiscount = this.calculateMemberDiscount();
+    const couponDiscount = this.calculateCouponDiscount();
+    const seasonalDiscount = this.calculateSeasonalDiscount();
+
+    const finalDiscount = this.applyDiscountRules(
+      memberDiscount,
+      couponDiscount,
+      seasonalDiscount
+    );
+
+    return this.price - finalDiscount;
+  }
+
+  private calculateMemberDiscount(): number {
+    const discountRate = this.isVip() ? 0.05 : 0;
+    return this.price * discountRate;
+  }
+
+  private calculateCouponDiscount(): number {
+    return this.coupon?.amount ?? 0;
+  }
+
+  private calculateSeasonalDiscount(): number {
+    const hasElectronics = this.items.some((item)=> item.category === 'electronics');
+    
+    // Electronics are excluded from discounts.
+    // Properly, we should apply rates per item, but let's keep it simple for now.
+    if (hasElectronics) {
+      return 0;
+    }
+    
+    return this.price * 0.15;
+  }
+
+  private applyDiscountRules(
+    memberDiscount: number,
+    couponDiscount: number,
+    seasonalDiscount: number
+  ): number {
+    
+    // Per policy, coupons and seasonal discounts cannot be combined.
+    // @see https://... link to documentation
+    const promotionDiscount = Math.max(couponDiscount, seasonalDiscount)
+
+    const totalDiscount = memberDiscount + promotionDiscount;
+
+    return Math.min(totalDiscount, MAX_DISCOUNT_AMOUNT)
+  }
+}
+```
+
+With this approach, the caller doesn't need to know the internal rules.
+
+```typescript
+const order = new Order(50000, customer, items)
+const total = order.calculateTotal()
+```
+
+Of course, in real-world e-commerce, discount policies and exceptions are far more complex. But the core principle remains the same.
+
+Anyone reading and using this code:
+1. Can tell at a glance what discounts exist.
+2. Can clearly see how each discount is calculated.
+3. Can clearly see the rules for applying discounts.
+4. Can add a new discount by simply adding one method.
+
+You can write code that is easy to understand and use without over-abstracting.
+
+## Don't Be Afraid of Redundancy
+
+Wait, am I saying we should avoid abstraction and choose duplication?
+
+WET stands for `Write Everything Twice`. Many developers misunderstand this. It doesn't mean "copy-paste without thinking."
+
+The core of WET is this:
+
+> If you don't understand it well enough to abstract it yet,
+> observe more through duplication.
+
+Just because two snippets of code look similar doesn't guarantee they represent the same concept.
+
+- They might be similar by coincidence.
+- The policy might not be stable yet.
+- They might change for different reasons in the future.
+
+Abstraction should happen only after the concept has fully surfaced. Until then, duplication is an exploratory process.
+
+**Cost of Duplicated Code < Cost of Wrong Abstraction**
+
+Duplication is easy to remove. A wrong abstraction is hard to undo.
+
+## When to Abstract?
+
+There's no definitive answer for when to abstract, but there are some signals.
+
+### 1. Are they similar concepts?
+
+Looking similar and being the same concept are different things.
+```typescript
+function formatUserName(name: string) {
+  return name.trim().toLowerCase();
+}
+
+function formatProductCode(code: string) {
+  return code.trim().toLowerCase();
+}
+```
+
+These two are just similar by coincidence. They could diverge at any time if policies change.
+
+### 2. Rule of Three
+
+> Use it once.
+> Twice, you might flinch, but duplicate it for now.
+> The third time it appears, refactor it.
+
+```typescript
+// First time
+function processOrderA() {
+  validate();
+  calculate();
+  save();
+}
+
+// Second time (Looks similar?)
+function processOrderB() {
+  validate();
+  calculate();
+  save();
+}
+
+// Third time (Now I see a pattern.)
+function processOrderC() {
+  validate();
+  calculate();
+  save();
+}
+
+// Abstraction
+function processOrder(order: Order) {
+  validate(order);
+  calculate(order);
+  save(order);
+} 
+```
+
+Don't rush to abstract by trying to predict the future. Abstraction is something you discover.
+
+### 3. Has the change stabilized?
+
+In early stages of a project or new feature, requirements change constantly. If policies and plans are shifting, everything could change fundamentally. Premature abstraction in such cases is dangerous.
+
+Wait until requirements have stabilized before you abstract.
+
+## Abstraction Isn't Free
+
+Abstraction comes with a cost.
+
+### 1. Cognitive Load
+
+Abstracted code take more time to understand.
+
+```typescript
+const total = price - (price * 0.1);
+
+const total = discountCalculator
+  .withStrategy(new PercentageStrategy(10))
+  .calculate(price);
+```
+
+To understand the second snippet, you need to know:
+1. What `DiscountCalculator` is.
+2. What `withStrategy` does.
+3. What `PercentageStrategy` is.
+4. What `calculate` does.
+
+### 2. Indirection
+
+You have to jump between multiple files to understand the actual behavior.
+```
+Order.ts → DiscountCalculator.ts → DiscountStrategy.ts 
+→ PercentageStrategy.ts → ... 
+```
+
+You need to have all these files open to debug.
+
+On the other hand, explicit code has everything in one place.
+
+### 3. Ripple Effect of Changes
+
+A change in abstracted code can break things in unexpected places.
+```typescript
+class DiscountCalculator {
+  calculate(price: number): number {
+    // "Let's treat negative prices as 0."
+    const validPrice = Math.max(0, price);
+    return this.strategy.calculate(validPrice);
+  }
+}
+```
+
+This change affects every place that uses `DiscountCalculator`.
+
+- Feature A: "Great! Just what we needed."
+- Feature B: "Wait, why are our tests breaking?"
+- Feature C: "But we actually *need* negative prices here..."
+
+Abstraction creates coupling. Coupling makes change difficult.
+
+### 4. Cost of Wrong Abstraction
+
+Fixing a wrong abstraction is much harder than cleaning up duplicated code.
+```typescript
+// Duplication → Abstraction: Easy
+function A() { /* same logic */ }
+function B() { /* same logic */ }
+↓
+function shared() { /* logic */ }
+
+// Wrong Abstraction → Splitting: Hard
+function shared(option1, option2, option3...) {
+  if (option1) { ... }
+  if (option2) { ... }
+  // Already used in many places.
+}
+↓
+// How do we split this? How do we migrate existing code?
+```
+
+Duplication is safe. A wrong abstraction is dangerous.
+
+## Abstraction is Discovered
+
+Good abstraction isn't something you design from the start. It's something you discover in concrete code.
+
+Build code that works first, wait for a pattern to emerge, and then abstract. It's never too late.
+
+```typescript
+// First implementation
+class UserImporter {
+  import(csvData: string): User[] {
+    const rows = this.parseCSV(csvData);
+    const users = rows.map(row => this.createUser(row));
+    return users.filter(this.isValid); 
+  }
+}
+
+// Second implementation
+class ProductImporter {
+  import(csvData: string): Product[] {
+    const rows = this.parseCSV(csvData);
+    const products = rows.map(row => this.createProduct(row));
+    return products.filter(this.isValid);
+  }
+}
+```
+A pattern emerges:
+1. Parse CSV.
+2. Convert rows to objects.
+3. Validate.
+
+```typescript
+abstract class CsvImporter<T> {
+  import(csvData: string): T[] {
+    const rows = this.parseCSV(csvData);
+    const items = rows.map(row => this.createItem(row));
+    return items.filter(item => this.isValid(item));
+  }
+
+  protected abstract createItem(row: string[]): T;
+  protected abstract isValid(item: T): boolean;
+}
+```
+
+### Refactoring Can Be Done Anytime
+
+Duplicated code can be merged at any time. But undoing a wrong abstraction is hard.
+
+```typescript
+// Duplication → Abstraction: Safe migration
+function processA() { ... }
+function processB() { ... }
+
+// 1. First, create the abstract function.
+function processCommon() { ... }
+
+// 2. Replace them one by one.
+function processA() { return processCommon(); }
+// Test → if fine, move to next.
+function processB() { return processCommon(); }
+
+// 3. Completed safely.
+```
+
+Conversely, a wrong abstraction:
+```typescript
+// A wrong abstraction already used in 100 places.
+function complexAbstraction(a, b, c, d, ...) { ... }
+
+// How to fix it?
+// - Modify all 100 places? → Risky
+// - Version it and deprecate? → Complex
+// - Just leave it? → Technical debt
+```
+
+**Duplication is easy to remove. Abstraction is hard to undo.**
+
+So, keeping duplication until you are certain is a rational choice.
+
+## Conclusion
+
+DRY is a great principle. But many developers misunderstand it. DRY is about removing the "duplication of knowledge," not necessarily unifying "the shape of code."
+
+WET isn't a silver bullet either. While merging duplication might seem easy, in reality, duplicated code gets used everywhere, making it hard to clean up as well.
+
+Look back at your codebase. Is there code that nobody dares to touch? Is there an "abstract class" you're afraid to change? Is there a "generic function" that takes 10 flags?
+
+Those are the legacy of trying to predict the future.
+
+**Good abstraction is:**
+- Easy to understand.
+- Easy to change.
+- Has clear responsibility.
+- Groups things that change for the same reason.
+
+**Bad abstraction:**
+- Tries to do everything.
+- Has countless options and flags.
+- Is scary to change.
+- Is understood by no one.
+
+Don't be afraid of duplication. Wait until the pattern is clear. It's never too late to consider abstraction after several repetitions.
+
+Abstraction is found, not invented. Abstract the patterns that naturally reveal themselves in the code. And above all, don't obsess over perfect abstraction.
+
+Sometimes, explicit and duplicated code that is easy to understand is better than perfectly abstracted code that no one can grasp.
+
+To live DRY or to stay WET?
+
+The answer is "both."
+
+A developer who abstracts as soon as they see duplication builds a complex framework.
+A developer who never tolerates duplication builds code that no one can understand.
+
+A wise developer knows when to choose duplication and when to choose abstraction.
+And that judgment comes from **experience and context**.
+
+Don't chase perfect abstraction.
+Chase **easy-to-understand code**.

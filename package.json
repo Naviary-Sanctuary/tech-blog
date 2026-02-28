@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "naviary-tech",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
+    "@astrojs/mdx": "^4.3.13",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "6.0.0-beta.15",
     "tailwindcss": "^4.2.1"

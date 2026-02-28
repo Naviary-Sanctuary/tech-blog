@@ -3,16 +3,16 @@ import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 
 const blog = defineCollection({
-  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/blog" }),
+  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content" }),
   schema: z.object({
     // basic information
     title: z.string(),
     description: z.string(),
     author: z.string().default("Naviary"),
 
-    // date (allow "2026-02-27")
-    date: z.coerce.date(),
-    updatedDate: z.coerce.date().optional(),
+    // date (only "2026-02-27")
+    date: z.string(),
+    updatedDate: z.string().optional(),
 
     // for series
     series: z.string().optional(),
@@ -28,3 +28,5 @@ const blog = defineCollection({
 
   })
 })
+
+export const collections = { blog }

@@ -1,0 +1,450 @@
+---
+title: "Naviary System Dev Diary #3: Backend - Domain Model Design"
+description: "The process of designing the domain model for Naviary system development."
+date: "2026-02-06"
+category: "BREEDING SYSTEM"
+tags: ["Naviary", "Bun", "DDD", "Domain Model", "Naviary"]
+author: "naviary"
+coverImage: "/images/naviary-system-03-design-models/junbae_changsik.jpeg"
+draft: false
+series: "Naviary System Development"
+seriesOrder: 3
+---
+
+## Introduction
+
+Now that we've covered the [tech stack](naviary-system-02-tech-stacks), I'd like to talk about how I designed the domain for the Naviary system.
+
+When starting an initial project, the most difficult part for me is always the `design`. If the design is wrong, I often end up having to rebuild things after they're finished, which I always regret.
+
+For a parrot breeding system, the available tools or open-source references are very limited. I looked at some foreign tools, but they felt... lacking in many ways. Both functionally and in terms of UI/UX.
+
+Furthermore, when I considered various features, the breeding logic itself wasn't just about recording data; it was about implementing complex real-world problems involving biological constraints and ethical considerations into a system.
+
+For example:
+
+- Calculations to prevent inbreeding
+- Lifecycle management from Egg -> Chick -> Adult
+  - And the records and validations appropriate for each step
+- Various validation rules for pair formation
+
+To implement these complex logics effectively, I decided to apply the DDD (Domain Driven Design) approach, which I've always liked.
+
+## 1. Bounded Context Design
+
+The Naviary system is divided into several contexts, some of which are introduced below.
+
+### 1.1 Breeding Context
+
+The core domain related to reproduction. Responsible for pair management, egg-laying, hatching, etc.
+
+#### Aggregate Root
+
+- **Pair**
+  - Manages breeding pairs and stores/manages inbreeding coefficient calculations and results.
+- **Clutch**
+  - Manages egg-laying cycles and tracks egg information.
+- **Parrot**
+  - Manages parrot individual information and lifecycles.
+
+```typescript
+export class Clutch extends Aggregate<Clutch> {
+  id: string;
+  pairId: string;
+  sequence: number;
+  totalEggs: number;
+  fertilizedEggs: number;
+  hatchedChicks: number;
+
+  layEgg() {
+    this.totalEggs += 1;
+  }
+
+  markEggFertilized() {
+    this.fertilizedEggs += 1;
+  }
+
+  recordHatch() {
+    this.hatchedChicks += 1;
+  }
+  ...
+}
+
+//
+export class Egg extends Aggregate<Egg> {
+  clutchId: string
+  ...
+}
+```
+
+At first glance, since an Egg belongs to a Clutch, one might think, `Couldn't Clutch be the Aggregate Root and Egg be a sub-Aggregate?`
+
+However, an Egg has a different lifecycle from a Clutch and often needs to be managed individually, such as during egg candling or hatching.
+
+Also, for sub-Aggregates, modifications should be made through the Aggregate Root, and I felt that modifying an Egg through a Clutch was unnatural.
+
+Therefore, I designed the Egg as a separate Aggregate Root, and when an egg is created or hatched, it publishes domain events to update the Clutch.
+
+### 1.2 Health Context (Health & Record Management)
+
+A context for managing the health and records of individuals.
+
+#### Aggregate Root
+
+- **HealthRecord**
+  - **EggCandlingRecord**
+    - Candling records
+  - **ChickWeightRecord**
+    - Chick weight measurement information
+  - **ChickFeedingRecord**
+    - Chick hand-formula records
+  - **ParrotFeedingRecord**
+    - Adult parrot feeding records
+
+### 1.3 Facility Context (Facility Management)
+
+A context related to facility management, including cages, aviaries, and equipment.
+
+#### Aggregate Root
+
+- **Cage**
+  - Cage information management
+- **Equipment**
+  - Other equipment information management
+
+### 1.4 Schedule Context (Schedule Management)
+
+- **Schedule**
+  - Definition and management of schedules
+- **Task**
+  - Actual tasks to be performed
+
+## 2. Domain Implementation
+
+### 2.1 Parrot
+
+The parrot is the most central model in this Naviary system. Parrots are registered in the system through two main paths.
+
+1. **External Inflow** - Breeders purchased from other domestic or overseas breeders.
+2. **Internal Breeding** - Individuals bred directly at Naviary.
+
+These two paths have different initial states and different data.
+
+```typescript
+export class Parrot extends Aggregate<Parrot> {
+  id: string; // leg band numbering
+  type: 'Parrot' | 'Chick';
+  status: 'Feeding' | 'breeder' | ...
+
+  fatherId?: string;
+  motherId?: string;
+  inbreedingCoefficient: number; // inbreeding coefficient
+
+  // imported breeding stock info
+  importedAt?: Date;
+  importedFrom?: string;
+  importPrice?: Money;
+  importFileIds?: string[]
+
+  hatchedAt?: Date;
+  eggId?: string;
+}
+```
+
+Breeding stock brought from outside must have information related to their intake. For example, documents, price, and purchase source are needed to know their origin. And since we bring in adult birds that have finished weaning, the initial state should be `type: 'Parrot', status: 'Breeder'`, unlike birds bred here.
+
+Also, because leg band numbering is different, the `id` is also generated following a different rule than for locally bred birds. To solve these problems, I initially considered CTI (Class Table Inheritance), but I felt it was a burden for the initial model and doubted if it really needed that much separation. So, I proceeded with a single table - single class configuration for now.
+
+However, since the initial states and other aspects of these two entities are different, I separated the creation methods.
+
+```typescript
+  static fromImported({
+    importedAt,
+    importedFrom,
+    importPrice,
+    importFileIds,
+    importMemo,
+    ...
+  }: {
+    importedAt: Date;
+    importedFrom: string;
+    importFileIds: string[];
+    importPrice: Value<Money>;
+    importMemo: string;
+    ...
+  }) {
+    if (!importedAt) {
+      throw badRequest('importedAt is required when register imported parrot.', {
+        errorMessage: 'Imported parrots must have an import date.',
+      });
+    }
+
+    // ... validations
+
+    const id = Parrot.generateId({
+      isImported: true,
+      ...
+    });
+
+    return new Parrot({
+      id,
+      type: 'Parrot',
+      saleStatus: 'nfs',
+      status: 'breeder',
+      importedAt,
+      importedFrom,
+      importPrice: new Money(importPrice),
+      importFileIds,
+      importMemo,
+      ...
+    });
+  }
+
+  static fromHatched({
+    eggId,
+    fatherId,
+    motherId,
+    inbreedingCoefficient,
+    hatchedAt,
+    ...
+  }: {
+    eggId: string;
+    fatherId: string;
+    motherId: string;
+    inbreedingCoefficient: number;
+    hatchedAt: Date;
+    ...
+  }) {
+    const id = Parrot.generateId({
+      isImported: false,
+      ...
+    });
+
+    return new Parrot({
+      id,
+      type: 'Chick',
+      saleStatus: 'available',
+      eggId,
+      fatherId,
+      motherId,
+      inbreedingCoefficient,
+      ...
+    });
+  }
+```
+
+Imported birds are adults, so they start directly in the breeder state (`'Parrot'`, `'breeder'`), and since they were brought in for breeding, they start as Not For Sale (`'nfs'`).
+
+In contrast, locally hatched birds are registered when they hatch from an egg, so they start in the chick state (`'Chick'`, `'feeding'`), being fed hand-formula. Additionally, their inbreeding coefficient is calculated from their parents and stored.
+
+### 2.2 Pair
+
+When creating a pair, the inbreeding coefficient must be calculated and validated. If the inbreeding coefficient is above a certain level, various problems caused by inbreeding can occur, so it must always be managed.
+
+Managing inbreeding coefficient calculations is difficult to control within the domain model itself, but since it's where business logic runs, I created it as a domain service (`InbreedingService`).
+
+```typescript
+  static async of(
+    {
+      maleId,
+      femaleId,
+      ...
+    }: {
+      maleId: string;
+      femaleId: string;
+      ...
+    },
+    inbreedingService: InbreedingService,
+  ) {
+    const id = Pair.generateId({ pairedAt, sequenceNumber });
+    const { offspringCoefficient, cumulativeCoefficient } = await inbreedingService.calculateInbreedingCoefficient(
+      maleId,
+      femaleId,
+    );
+
+    if (offspringCoefficient >= 10_00) {
+      throw badRequest(`Offspring coefficient(${(offspringCoefficient / 100).toFixed(2)}%) is too high.`, {
+        errorMessage: `Offspring coefficient (${(offspringCoefficient / 100).toFixed(
+          2,
+        )}%) is too high. The coefficient must be 10% or lower.`,
+      });
+    }
+
+    if (cumulativeCoefficient >= 20_00) {
+      throw badRequest(`Cumulative coefficient(${(cumulativeCoefficient / 100).toFixed(2)}%) is too high.`, {
+        errorMessage: `Cumulative coefficient (${(cumulativeCoefficient / 100).toFixed(
+          2,
+        )}%) is too high. The 5th generation cumulative coefficient must be 20% or lower.`,
+      });
+    }
+
+    return new Pair({
+      id,
+      maleId,
+      femaleId,
+      cageId,
+      offspringCoefficient,
+      note,
+      pairedAt,
+    });
+  }
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    For the Inbreeding Service, Wright's formula was used.
+  </span>
+</div>
+
+## 3. Design Principles and Trade-offs
+
+DDD is a design theory. There is no explanation of exactly how to write code or what methods to use for implementation. So, I followed DDD design methods to some extent while compromising for the sake of practicality.
+
+First, I implemented almost all business logic within the domain models, and implemented things that were difficult to put in models into domain services. This allowed the domain models to become "Rich Domain Models," so if you want to see the business logic for a particular domain, you can just look at the model.
+
+### 3.1 Ubiquitous Language
+
+I tried to express method names using domain terminology used in the field as much as possible.
+
+```typescript
+// Good example
+parrot.wean(); // Although it's about stopping wet hand-formula, the expression "wean" is actually used.
+egg.hatch();
+cage.occupy();
+
+// Bad example
+parrot.status = "weaned";
+parrot.eatSolidFood();
+```
+
+By using domain terminology this way, I ensured that no context switching is required when communicating with domain experts.
+
+### 3.2 Domain Events
+
+When an egg hatches, a chick should be created automatically. Of course, it could be registered manually, or the `Parrot` could be created directly when the egg's hatch button is clicked.
+
+However, in the first case, it’s too cumbersome and analog for the user. I believe many breeders are currently doing it this way. In the second case, the two are too tightly coupled, which isn't good.
+
+When an egg hatches, the user clicks the hatch button. At this time, an `EggHatchedEvent` is published.
+
+```typescript
+export class Egg extends Aggragte<Egg> {
+  hatch({ hatchedAt }: { hatchedAt: Date }){
+    ...
+
+    this.hatchedAt = hatchedAt;
+
+    this.publishEvent( // publishEvent is a built-in method in Aggregate.
+      new EggHatchedEvent(
+        this.id,
+        this.hatchedAt
+        ...
+      )
+    )
+  }
+}
+```
+
+Then, an event handler subscribing to that event can handle the parrot creation.
+
+```typescript
+export class ParrotService extends DddService {
+  ...
+
+  @EventHandler(EggHatchedEvent,{
+    eventId: EggHatchedEvent.eventId,
+    description: 'Registers a chick when an egg hatches.'
+  })
+  @Transactional()
+  async onEggHatchedEvent(evnet: EggHatchedEvent){
+    const { eggId, fatherId, motherId, inbreedingCoefficient, hatchedAt } = event;
+
+    const parrot = Parrot.fromHateched({
+      eggId,
+      fatherId,
+      motherId,
+      inbreedingCoefficient,
+      hatchedAt,
+      ...
+    })
+
+    await this.parrotRepository.save([parrot]);
+  }
+}
+```
+
+This approach has both advantages and disadvantages.
+
+1. **Advantages**
+
+- **Loose Coupling**: Even if the `Egg` model and `Parrot` model don't know about each other, they can communicate through events.
+- **Good Scalability**: If chick registration logic is added later, you just need to add a handler that subscribes to the event.
+- **Responsibility Separation**: The Egg only needs to record the fact that it hatched, and `ParrotService` handles the chick registration logic.
+
+2. **Disadvantages**
+
+- **Separated Transactions**: Since the event published in `EggService` is processed in `ParrotService`, transactions are separated. Of course, this is natural if you choose EDA. In such cases, policies like compensation transactions can be adopted.
+- **Hard to See the Flow at a Glance**: Since the code is not explicitly connected but loosely coupled, it's not easy to understand the flow at a glance.
+- **Need to Consider Idempotency**: Event handlers must observe idempotency so that the same result is produced even if they are executed multiple times. Since it's an environment where it might be executed twice or not at all, scenarios like re-execution must always be considered.
+
+Of course, there are other disadvantages currently. I haven't considered compensation transactions yet. For now, there aren't many cases, and all events are being recorded in the database, so they can be re-executed later.
+
+Also, domain events currently run in memory using RxJS rather than a system like Kafka, so if the server shuts down in the middle, the event handler might not run.
+
+To deal with this, I implemented it so that it's first saved to the database, and once saved, it can be re-executed at any time.
+
+### 3.3 Trade-offs
+
+DDD can actually be inefficient for early-stage projects. First, if the domain expert and the software developer are different people, you have to start by aligning their contexts.
+
+In my case, I was both the domain expert and the software developer, so I had a bit of an advantage in this regard.
+
+Also, it can take a long time because you have to design various structural elements in the folder structure or architecture for initial development. However, since there were many parts that could be slightly modified from my previous personal projects or systems I used at my former company, I didn't feel it slowed me down significantly.
+
+Of course, I also had cases where I changed the DB and ORM, or where models were merged on a large scale (initially I separated Parrot and Chick but then merged them). In this process, there were many modifications, leading me to think that the initial design wasn't perfect.
+
+While DDD prefers preserving the purity of the domain model, I compromised for practicality.
+
+```typescript
+@Entity()
+class Parrot extneds Aggregate<Parrot> {
+  @PrimaryKey()
+  id: string;
+}
+```
+
+In MikroORM, entities are defined using decorators on top of classes. This way, the domain layer references an ORM that is unrelated to the domain, breaking purity.
+
+Of course, you could completely separate entity classes and domain classes. However, in that case, an entity/class mapper is needed, increasing code volume and repetitive work.
+
+Considering these things, I decided to use `domain class == entity class`.
+
+## Wrap-up
+
+<div className="flex flex-col items-center justify-center text-center">
+  ![Junbae and
+  Changsik](/images/naviary-system-03-design-models/junbae_changsik.jpeg)
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    My two Caique friends, Junbae and Changsik
+  </span>
+</div>
+
+To solve the complex real-world problems of a breeding system that didn't exist before, I chose DDD. To summarize, I think I followed these core values:
+
+**1. Clearly expressing business logic in code**
+
+Complex real-world logic like inbreeding coefficient calculations and lifecycle management was implemented in domain models and services. Thanks to this, business rules are clearly revealed in the code, and real-world language is used so it's easy to understand even when looking at it later.
+
+**2. Selective use of various DDD methods**
+
+Patterns like factory methods and domain events were actually helpful in solving problems. However, rather than following pure DDD, I prioritized practicality. I made compromises like using ORM decorators directly.
+
+**3. DDD is design, not just a development method or pattern**
+
+Initially I separated Parrot and Chick but then merged them (this was a problem that arose while looking for a convenient way to solve the domain model in code), and I also switched from PostgreSQL to MySQL.
+
+Even if the design isn't perfect, if important business logic is well-contained in the model, those parts were hardly modified. (The domain model also didn't change at all except for ORM-related code.)
+
+DDD is not a silver bullet. However, it was a good guide for organizing thoughts and expressing them in code when dealing with complex domains. Especially since I was the domain expert and developer while working alone, the process of transferring my breeding knowledge into code was natural. This might have been possible because I've always liked DDD and have experience designing many systems with it.
+
+Ultimately, what's important is understanding the domain and expressing it well in code. This has been the value I've cherished most since I first became a developer. I feel it has become even more important recently in the age of AI. I hope you also develop an eye for seeing the essence of what your development is trying to solve in your own work :)

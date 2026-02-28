@@ -1,0 +1,15 @@
+---
+import { withLang } from "../libs/i18n";
+
+interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
+  href: string;
+}
+
+const currentLang = Astro.currentLocale || "ko";
+const { href, ...rest } = Astro.props;
+const localizedHref = withLang(href, currentLang);
+---
+
+<a href={localizedHref} {...rest}>
+  <slot />
+</a>

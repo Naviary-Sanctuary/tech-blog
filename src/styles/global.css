@@ -2,6 +2,8 @@
 
 @theme {
   --color-primary: #ff781f;
+  --color-secondary: #495436;
+  --color-tertiary: #d69400;
   --color-background: #FDFDFFFF;
   --color-background-footer: #232323;
   --color-footer: #CCC;

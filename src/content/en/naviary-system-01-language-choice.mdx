@@ -1,0 +1,225 @@
+---
+title: "Naviary System Dev Diary #1: Why I Chose TypeScript for backend"
+description: "The language selection process for developing a Naviary system. A summary of how I reviewed and chose a language based on three criteria."
+date: "2026-01-21"
+category: "BREEDING SYSTEM"
+tags: ["TypeScript", "Language Choice", "DDD", "Tech Stack"]
+author: "naviary"
+coverImage: "/images/naviary-system-01-language-choice/parrot-typescript.png"
+draft: false
+series: "Naviary System Development"
+seriesOrder: 1
+---
+
+## Introduction
+
+When I started developing the backend for the Naviary system, the first decision I had to make was the choice of programming language.
+
+Although TypeScript has been my primary language throughout my development career and the one I'm most familiar with, I was very interested in exploring new languages at the time, so I looked into Go, Kotlin, and the Erlang family, but ultimately came back to TypeScript.
+
+## Language Selection Criteria
+
+A breeding center requires a large initial investment. In a situation where server costs had to be minimized, the criteria for language selection were as follows:
+
+1. **Lightweight** - Minimizing server costs
+2. **Development Productivity** - Solo development
+3. **Domain Expressiveness** - Clear expression of complex breeding logic
+
+## Review of Candidates
+
+### Go
+
+#### From a Linguistic Perspective
+
+Go is lightweight, fast, and simple to deploy. I really like Go's lightness and its simple syntax. In fact, I had great fun building backends for a few projects with Go.
+However, when using it, I found the support for functional expressions or object-oriented programming to be insufficient, so I judged that my skills were lacking to express the complex real-world problem of parrot breeding into clear domain logic.
+
+```go
+type Gender string
+const (
+  Male Gender = "MALE"
+  Female Gender = "FEMALE"
+  UnknownGender Gender = "UNKNOWN"
+)
+
+type ParrotStatus string
+const (
+  Feeding ParrotStatus = "FEEDING"
+  Weaned ParrotStatus = "WEANED"
+  Breeder ParrotStatus = "BREEDER"
+)
+
+type Parrot struct {
+  Aggregate // To use something like an abstract class with audit columns, you need to embed it like this.
+  ID string
+  Name string
+  Gender Gender
+  Status ParrotStatus
+  ImportedAt time.Time
+}
+
+func (parrot *Parrot) wean() error {
+  if parrot.Status != Feeding {
+    return fmt.Errorf("parrot is not feeding")
+  }
+  parrot.Status = Weaned
+  return nil
+}
+```
+
+<span className="text-sm text-[hsl(215,15%,50%)] italic">
+  Parrot model simply implemented in Go
+</span>
+
+#### ORM
+
+Most Go ORMs are centered around query builders or raw queries. While GORM is said to avoid some of these issues, I felt its features were somewhat lacking compared to the ORMs I had used before.
+
+Since the Naviary system involves complex relationships between real-world domains, I decided that Go's ORM was unsuitable for me in terms of productivity.
+
+---
+
+### Kotlin
+
+#### From a Linguistic Perspective
+
+I think Kotlin is a sophisticated language. It has excellent expressiveness and modern syntax.
+Although I'm not very close with Java, I've done a project or two with Kotlin, so it was somewhat familiar, and I think it's a well-designed language.
+However, unlike TypeScript, it is more object-oriented, which I thought might slightly reduce productivity for rapid implementation.
+
+```kotlin
+enum class Gender {
+    MALE, FEMALE, UNKNOWN
+}
+
+enum class ParrotStatus {
+    FEEDING, WEANED, BREEDER
+}
+
+class Parrot(
+    val id: String,
+    val name: String,
+    val gender: Gender,
+    var status: ParrotStatus,
+    val importedAt: LocalDateTime
+) : Aggregate() {
+    fun wean() {
+        if (status != ParrotStatus.FEEDING) {
+            throw IllegalStateException("parrot is not feeding")
+        }
+        status = ParrotStatus.WEANED
+    }
+}
+```
+
+<span className="text-sm text-[hsl(215,15%,50%)] italic">
+  Parrot model simply implemented in Kotlin
+</span>
+
+#### JVM
+
+The JVM consumes a lot of memory. Build times are also slow, and it's burdensome to run on a small server alongside other tools.
+In a breeding center with high initial costs, I didn't want to face issues like having to scale up the server just because of the language choice.
+The Spring ecosystem was also a bit difficult for me. While it might be good to have things strictly defined like in Spring, I thought its abstractions were so well-done that it was hard for me to understand the underlying principles.
+Of course, if I were running a breeding center, I'd have plenty of time at night, so I could study then... :)
+
+---
+
+### Gleam
+
+#### From a Linguistic Perspective
+
+The Erlang VM is known for building robust systems.
+When I actually tried a simple project with Gleam, I found its simple syntax and functional characteristics led to good development productivity.
+I especially liked the pattern matching and functional programming style. Coming from TypeScript, Gleam's pattern matching seemed revolutionary.
+
+```gleam
+pub type Gender {
+  Male
+  Female
+  Unknown
+}
+
+pub type ParrotStatus {
+  Feeding
+  Weaned
+  Breeder
+}
+
+pub type Parrot {
+  Parrot(
+    id: String,
+    name: String,
+    gender: Gender,
+    status: ParrotStatus,
+    imported_at: DateTime,
+  )
+}
+
+pub fn wean(parrot: Parrot) -> Result(Parrot, String) {
+  case parrot.status {
+    Feeding -> Ok(Parrot(..parrot, status: Weaned))
+    _ -> Error("parrot is not feeding")
+  }
+}
+```
+
+<span className="text-sm text-[hsl(215,15%,50%)] italic">
+  Parrot model implemented in Gleam
+</span>
+
+#### Functional Language
+
+While being a functional language helped with productivity, the Naviary system involves complex logic like genetic tracking and coefficient of inbreeding calculations.
+Since I had mostly used object-oriented languages, I wasn't confident that I could clearly express such complex logic using functional programming.
+Additionally, I felt Gleam's ecosystem was still too immature. As a relatively new language, there weren't many references to look to, so I decided to set it aside for now.
+
+---
+
+### TypeScript
+
+#### Back to TypeScript
+
+This is the language I've been using since I first started web development before my first job, and it has remained my primary language throughout my life as a full-stack developer.
+The advantage of TypeScript is that it's an all-rounder with no significant missing pieces.
+Its domain expressiveness was excellent, blending object-oriented and functional styles appropriately. While its type system is weaker than other strongly-typed languages, that very weakness boosted productivity, and I didn't find it "weak" enough to be a problem.
+The ecosystem is also one of the largest in the world, which significantly enhanced productivity.
+
+```typescript
+export const gender = ["male", "female", "unknown"] as const;
+export type Gender = (typeof gender)[number];
+
+export const parrotStatus = ["feeding", "weaned", "breeder"] as const;
+export type ParrotStatus = (typeof parrotStatus)[number];
+
+export class Parrot extends Aggregate {
+  id: string;
+  name: string;
+  gender: Gender;
+  status: ParrotStatus;
+  importedAt: Date;
+
+  wean() {
+    if (this.status !== "feeding") {
+      throw new Error("parrot is not feeding");
+    }
+    this.status = "weaned";
+  }
+}
+```
+
+<span className="text-sm text-[hsl(215,15%,50%)] italic">
+  Parrot model implemented in TypeScript
+</span>
+
+## Conclusion
+
+Ultimately, I came back to TypeScript. It was a bit disappointing to miss out on the joy of learning a new language and its philosophy and principles, which I had enjoyed even before starting the business.
+
+However, I am now going to run the breeding center as an entrepreneur, not just a developer. Rapid development and stable operation are higher priorities than technical exploration. Choosing a familiar tool was the rational decision.
+And there is still much to learn in TypeScript. Areas like advanced type system features and performance optimization remain vast.
+
+New languages are something I'll try if there's a suitable project for them.
+Currently, I'm using a separate Go server for image processing. I'm not strictly sticking only to TypeScript; I'm using each language where it can leverage its strengths. I'll cover this in more detail later.
+
+In the [next post](naviary-system-02-tech-stacks), I'll talk about choosing a runtime and framework.
