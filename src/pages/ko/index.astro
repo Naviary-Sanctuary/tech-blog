@@ -3,15 +3,19 @@ import { getCollection } from "astro:content";
 import Divider from "../../components/Divider.astro";
 import Link from "../../components/Link.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getMessages } from "../../libs/i18n/messages";
 
 const posts = (await getCollection("koBlog"))
   .sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
   )
   .slice(0, 3);
+
+const locale = Astro.currentLocale ?? "ko";
+const t = getMessages(locale).home;
 ---
 
-<BaseLayout description="나비어리의 기술은 기록에서 시작됩니다.">
+<BaseLayout description={t.description}>
   <main class="max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6">
     <!-- Hero Section -->
     <section class="mb-20 relative">
@@ -19,25 +23,25 @@ const posts = (await getCollection("koBlog"))
         <h1
           class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] break-keep"
         >
-          나비어리의 기술은
+          {t.heroTitle1}
           <br class="sm:hidden" />
           <span class="relative inline-block mx-1">
             <span
               class="absolute left-0 bottom-1 w-full h-[10px] bg-primary/40 rounded-sm"
             ></span>
-            <span class="relative z-10">기록</span>
-          </span>에서 시작됩니다.
+            <span class="relative z-10">{t.heroTitleAccent}</span>
+          </span>{t.heroTitle2}
         </h1>
         <div
           class="mt-10 max-w-xl space-y-5 text-zinc-600 text-[15px] sm:text-lg leading-8 break-keep"
         >
-          <p>기록은 좌표가 되고, 좌표는 방향이 됩니다.</p>
+          <p>{t.heroBody1}</p>
           <p>
-            우리는 개체와 번식의 흐름을 구조화하고,
+            {t.heroBody2}
             <br class="hidden sm:block" />
-            브리딩을 설계 가능한 시스템으로 전환합니다.
+            {t.heroBody3}
           </p>
-          <p>이곳은 그 과정을 기록하는 기술 아카이브입니다.</p>
+          <p>{t.heroBody4}</p>
         </div>
       </div>
     </section>
@@ -56,7 +60,7 @@ const posts = (await getCollection("koBlog"))
           <span
             class="relative after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-primary after:transition-all after:duration-200 group-hover:after:w-full"
           >
-            더보기
+            {t.readMore}
           </span>
         </Link>
       </div>

@@ -11,7 +11,7 @@ import { getMessages } from "../../../libs/i18n/messages";
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 export const getStaticPaths = (async ({ paginate }) => {
-  const posts = (await getCollection("koBlog", ({ data }) => !data.draft)).sort(
+  const posts = (await getCollection("enBlog", ({ data }) => !data.draft)).sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
   );
 
@@ -19,7 +19,8 @@ export const getStaticPaths = (async ({ paginate }) => {
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
-const t = getMessages("ko").articles;
+
+const t = getMessages("en").articles;
 ---
 
 <BaseLayout title={t.title} description={t.description}>
