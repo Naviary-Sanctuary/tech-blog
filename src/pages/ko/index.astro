@@ -4,7 +4,7 @@ import Divider from "../../components/Divider.astro";
 import Link from "../../components/Link.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const posts = (await getCollection("blog"))
+const posts = (await getCollection("koBlog"))
   .sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
   )
@@ -67,7 +67,7 @@ const posts = (await getCollection("blog"))
           posts.map((post) => {
             return (
               <Link
-                href={`/articles/${post.id}`}
+                href={`/articles/post/${post.id}`}
                 class="group block rounded-xl -mx-3 px-3 py-4 transition-all duration-200 hover:bg-tertiary/2 hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary/60 active:scale-[0.998]"
                 aria-label={`${post.data.title} 글 읽기`}
               >
