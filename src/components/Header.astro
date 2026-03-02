@@ -2,6 +2,8 @@
 import { navigationItems } from "../libs/navigation";
 import GithubIcon from "./icons/GithubIcon.astro";
 import RssIcon from "./icons/RssIcon.astro";
+import MenuIcon from "./icons/MenuIcon.astro";
+import CloseIcon from "./icons/CloseIcon.astro";
 import LanguageSelect from "./LanguageSelect.astro";
 
 const lang = Astro.currentLocale || "ko";
@@ -55,7 +57,12 @@ const menus = navigationItems.map((item) => {
         aria-expanded="false"
         aria-controls="mobile-menu"
       >
-        <span class="material-symbols-outlined text-[24px]">menu</span>
+        <span data-menu-icon>
+          <MenuIcon className="size-5" />
+        </span>
+        <span data-close-icon class="hidden">
+          <CloseIcon className="size-5" />
+        </span>
       </button>
     </div>
   </div>
@@ -109,24 +116,29 @@ const menus = navigationItems.map((item) => {
   function setupHeader() {
     const mobileButton = document.getElementById("mobile-menu-button");
     const mobileMenu = document.getElementById("mobile-menu");
-    const mobileIcon = mobileButton?.querySelector(
-      ".material-symbols-outlined",
-    );
+    const menuIcon = mobileButton?.querySelector("[data-menu-icon]");
+    const closeIcon = mobileButton?.querySelector("[data-close-icon]");
+
+    const setMobileIconState = (isOpen: boolean) => {
+      if (!menuIcon || !closeIcon) return;
+      menuIcon.classList.toggle("hidden", isOpen);
+      closeIcon.classList.toggle("hidden", !isOpen);
+    };
 
     const closeMobileMenu = () => {
-      if (!mobileButton || !mobileMenu || !mobileIcon) return;
+      if (!mobileButton || !mobileMenu) return;
       mobileButton.setAttribute("aria-expanded", "false");
       mobileMenu.classList.add("hidden");
-      mobileIcon.textContent = "menu";
+      setMobileIconState(false);
       document.body.style.overflow = "";
     };
 
     const toggleMobileMenu = () => {
-      if (!mobileButton || !mobileMenu || !mobileIcon) return;
+      if (!mobileButton || !mobileMenu) return;
       const isOpen = mobileButton.getAttribute("aria-expanded") === "true";
       mobileButton.setAttribute("aria-expanded", String(!isOpen));
       mobileMenu.classList.toggle("hidden", isOpen);
-      mobileIcon.textContent = isOpen ? "menu" : "close";
+      setMobileIconState(!isOpen);
       document.body.style.overflow = isOpen ? "" : "hidden";
     };
 

@@ -15,6 +15,7 @@ import MdxBlockquote from "../../../../components/mdx/MdxBlockquote.astro";
 import MdxOl from "../../../../components/mdx/MdxOl.astro";
 import MdxUl from "../../../../components/mdx/MdxUl.astro";
 import MdxLi from "../../../../components/mdx/MdxLi.astro";
+import ArrowLeftIcon from "../../../../components/icons/ArrowLeftIcon.astro";
 import { Image } from "astro:assets";
 import Divider from "../../../../components/Divider.astro";
 
@@ -115,10 +116,7 @@ const structuredData = {
       href="/articles"
       class="group flex items-center gap-1.5 w-fit text-secondary/80 hover:text-primary transition-colors"
     >
-      <span
-        class="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1"
-        >arrow_back</span
-      >
+      <ArrowLeftIcon className="size-5 transition-transform group-hover:-translate-x-1" />
       <span class="text-sm font-medium">{t.backToList}</span>
     </Link>
     <article class="flex flex-col gap-4 min-w-0">
@@ -195,9 +193,3 @@ const structuredData = {
     </div>
   </div>
 </BaseLayout>
-
-<style>
-  .material-symbols-outlined {
-    font-size: 20px;
-  }
-</style>

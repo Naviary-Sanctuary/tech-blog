@@ -21,5 +21,8 @@ export default defineConfig({
   integrations: [mdx({
     syntaxHighlight: 'shiki',
     shikiConfig: { theme: "material-theme" }
-  })]
+  })],
+  build: {
+    inlineStylesheets: "always"
+  }
 });

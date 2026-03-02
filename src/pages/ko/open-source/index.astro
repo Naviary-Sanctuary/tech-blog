@@ -2,6 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Title from "../../../components/Title.astro";
 import Divider from "../../../components/Divider.astro";
+import ExternalLinkIcon from "../../../components/icons/ExternalLinkIcon.astro";
 import { openSources } from "../../../libs/opensource";
 import { getMessages } from "../../../libs/i18n/messages";
 const t = getMessages("ko").openSource;
@@ -41,9 +42,7 @@ const t = getMessages("ko").openSource;
                   class="inline-flex items-center gap-1 text-sm font-medium text-secondary/60 hover:text-primary transition-colors"
                 >
                   GitHub
-                  <span class="material-symbols-outlined text-[15px] mb-px">
-                    open_in_new
-                  </span>
+                  <ExternalLinkIcon className="size-4 mb-px" />
                 </a>
                 {openSource.homepage && (
                   <a
@@ -53,9 +52,7 @@ const t = getMessages("ko").openSource;
                     class="inline-flex items-center gap-1 text-sm font-medium text-secondary/60 hover:text-primary transition-colors"
                   >
                     Homepage
-                    <span class="material-symbols-outlined text-[15px] mb-px">
-                      open_in_new
-                    </span>
+                    <ExternalLinkIcon className="size-4 mb-px" />
                   </a>
                 )}
               </div>
@@ -67,9 +64,3 @@ const t = getMessages("ko").openSource;
     </div>
   </section>
 </BaseLayout>
-
-<style>
-  .material-symbols-outlined {
-    font-size: 16px;
-  }
-</style>
