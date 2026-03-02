@@ -1,12 +1,12 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
-import cloudflare from '@astrojs/cloudflare';
+import vercel from '@astrojs/vercel';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   site: "https://tech.navaiary.io",
   output: "static",
-  adapter: cloudflare({ platformProxy: { enabled: true } }),
+  adapter: vercel(),
   vite: {
     plugins: [tailwindcss()]
   },

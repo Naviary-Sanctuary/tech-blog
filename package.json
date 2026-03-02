@@ -12,13 +12,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.12",
+    "@astrojs/vercel": "10.0.0-beta.6",
     "@astrojs/mdx": "^4.3.13",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "6.0.0-beta.15",
     "tailwindcss": "^4.2.1"
-  },
-  "devDependencies": {
-    "wrangler": "^4.68.1"
   }
 }

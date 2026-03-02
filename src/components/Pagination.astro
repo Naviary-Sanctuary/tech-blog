@@ -7,15 +7,22 @@ interface Props {
 const currentHref = Astro.url.pathname;
 const { currentPage, totalPage } = Astro.props;
 
-const targetHref =
-  currentPage === 1
-    ? currentHref
-    : currentHref.split("/").slice(0, -1).join("/");
+const normalizePath = (path: string) => {
+  if (path === "/") return "/";
+  const cleaned = path.replace(/^\/+|\/+$/g, "");
+  return `/${cleaned}`;
+};
 
-const pages = Array.from({ length: totalPage }, (_, i) => {
-  const page = i + 1;
-  const href = page === 1 ? targetHref : `${targetHref}/${page}`;
-  return { page, href };
+const toPageHref = (page: number) => {
+  const normalizedPath = normalizePath(currentHref);
+  const basePath = normalizedPath.replace(/\/\d+$/, "") || "/";
+  const targetPath = page === 1 ? basePath : `${basePath}/${page}`;
+  return targetPath === "/" ? "/" : `${targetPath}/`;
+};
+
+const pages = Array.from({ length: totalPage }, (_, index) => {
+  const page = index + 1;
+  return { page, href: toPageHref(page) };
 });
 ---
 
@@ -24,6 +31,7 @@ const pages = Array.from({ length: totalPage }, (_, i) => {
     pages.map((page) => (
       <a
         href={page.href}
+        aria-current={page.page === currentPage ? "page" : undefined}
         class={`flex items-center justify-center size-10 rounded-lg text-sm font-medium transition-colors ${
           page.page === currentPage
             ? "bg-primary text-white"
