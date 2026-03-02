@@ -1,0 +1,146 @@
+---
+import type { InferGetStaticParamsType, InferGetStaticPropsType } from "astro";
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import { getMessages } from "../../../../libs/i18n/messages";
+import Link from "../../../../components/Link.astro";
+import MdxH1 from "../../../../components/mdx/MdxH1.astro";
+import MdxH2 from "../../../../components/mdx/MdxH2.astro";
+import MdxH3 from "../../../../components/mdx/MdxH3.astro";
+import MdxH4 from "../../../../components/mdx/MdxH4.astro";
+import MdxLink from "../../../../components/mdx/MdxLink.astro";
+import MdxImage from "../../../../components/mdx/MdxImage.astro";
+import MdxPre from "../../../../components/mdx/MdxPre.astro";
+import MdxBlockquote from "../../../../components/mdx/MdxBlockquote.astro";
+import MdxOl from "../../../../components/mdx/MdxOl.astro";
+import MdxUl from "../../../../components/mdx/MdxUl.astro";
+import MdxLi from "../../../../components/mdx/MdxLi.astro";
+import { Image } from "astro:assets";
+import Divider from "../../../../components/Divider.astro";
+
+const mdxComponents = {
+  h1: MdxH1,
+  h2: MdxH2,
+  h3: MdxH3,
+  h4: MdxH4,
+  a: MdxLink,
+  img: MdxImage,
+  pre: MdxPre,
+  blockquote: MdxBlockquote,
+  ol: MdxOl,
+  ul: MdxUl,
+  li: MdxLi,
+};
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+export const getStaticPaths = async () => {
+  const posts = await getCollection("koBlog");
+
+  return posts.map((post, index) => {
+    const prevPost = posts[index - 1];
+    const nextPost = posts[index + 1];
+    return { params: { slug: post.id }, props: { post, prevPost, nextPost } };
+  });
+};
+
+const { post, prevPost, nextPost } = Astro.props;
+
+const t = getMessages("ko").post;
+const { Content } = await render(post);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <div
+    class="max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col gap-10"
+  >
+    <Link
+      href="/articles"
+      class="group flex items-center gap-1.5 w-fit text-secondary/80 hover:text-primary transition-colors"
+    >
+      <span
+        class="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1"
+        >arrow_back</span
+      >
+      <span class="text-sm font-medium">{t.backToList}</span>
+    </Link>
+    <article class="flex flex-col gap-4">
+      <div class="flex gap-4 items-center">
+        <div
+          class="inline-flex w-fit items-center rounded-[4px] border border-zinc-300/70 px-2 py-0.5 text-[11px] font-medium tracking-wide text-secondary"
+        >
+          {post.data.category}
+        </div>
+        <span
+          class="shrink-0 pt-1 w-fit whitespace-nowrap text-xs sm:text-sm tracking-wide text-zinc-400"
+          >{post.data.date}</span
+        >
+      </div>
+      <h1
+        class="scroll-mt-28 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15] mt-8 mb-6"
+      >
+        {post.data.title}
+      </h1>
+      <Image
+        src={post.data.heroImage}
+        alt={post.data.title}
+        class="w-full aspect-video md:aspect-2/1 object-cover rounded-2xl mb-8 border border-zinc-200/50"
+      />
+      <div
+        class="prose prose-zinc max-w-none text-secondary/90 leading-[1.75] md:text-lg tracking-tight"
+      >
+        <Content components={mdxComponents} />
+      </div>
+    </article>
+    <Divider />
+    <div class="flex gap-2 flex-wrap items-center">
+      {
+        post.data.tags.map((tag) => (
+          <span class="inline-flex w-fit items-center rounded-[4px] border border-zinc-300/70 px-2 py-0.5 text-[11px] font-medium tracking-wide bg-tertiary/15 text-secondary">
+            #{tag}
+          </span>
+        ))
+      }
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full">
+      {
+        prevPost ? (
+          <Link href={`/articles/post/${prevPost.id}`} class="flex-1 w-full">
+            <div class="flex flex-col items-start border border-secondary/20 p-4 rounded-xl hover:bg-secondary/5 hover:border-secondary/40 transition-all h-full justify-center">
+              <span class="text-xs sm:text-sm text-secondary/60 mb-1">
+                {t.prevPost}
+              </span>
+              <span class="text-left text-secondary/90 font-semibold line-clamp-2">
+                {prevPost.data.title}
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <div class="hidden sm:block flex-1" />
+        )
+      }
+      {
+        nextPost ? (
+          <Link href={`/articles/post/${nextPost.id}`} class="flex-1 w-full">
+            <div class="flex flex-col items-end text-right border border-secondary/20 p-4 rounded-xl hover:bg-secondary/5 hover:border-secondary/40 transition-all h-full justify-center">
+              <span class="text-xs sm:text-sm text-secondary/60 mb-1">
+                {t.nextPost}
+              </span>
+              <span class="text-right text-secondary/90 font-semibold line-clamp-2">
+                {nextPost.data.title}
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <div class="hidden sm:block flex-1" />
+        )
+      }
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+</style>

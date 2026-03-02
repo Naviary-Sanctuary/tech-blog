@@ -17,9 +17,16 @@ type ArticleMessage = {
   description: string;
 }
 
+type PostMessage = {
+  backToList: string;
+  prevPost: string;
+  nextPost: string;
+}
+
 type Messages = {
   home: HomeMessage;
   articles: ArticleMessage;
+  post: PostMessage;
 }
 
 export const messages: Record<Locale, Messages> = {
@@ -38,6 +45,11 @@ export const messages: Record<Locale, Messages> = {
     articles: {
       title: "Articles",
       description: "나비어리의 기술은 기록에서 시작됩니다.",
+    },
+    post: {
+      backToList: "목록으로",
+      prevPost: "이전 게시글",
+      nextPost: "다음 게시글",
     }
   },
   en: {
@@ -55,6 +67,11 @@ export const messages: Record<Locale, Messages> = {
     articles: {
       title: "Articles",
       description: "Naviary's technology begins with records.",
+    },
+    post: {
+      backToList: "Back to List",
+      prevPost: "Previous Article",
+      nextPost: "Next Article",
     }
   }
 }

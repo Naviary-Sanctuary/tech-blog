@@ -5,13 +5,15 @@ date: "2026-02-23"
 category: "BREEDING SYSTEM"
 tags: ["Architecture", "DDD", "RxJS", "Domain Events", "Naviary"]
 author: "naviary"
-coverImage: "/images/naviary-system-04-domain-event/egg-hatching.png"
+heroImage: "../assets/naviary-system-04-domain-event/egg-hatching.png"
 draft: false
 series: "Naviary System Development"
 seriesOrder: 4
 ---
 
-![Egg Hatching](/images/naviary-system-04-domain-event/egg-hatching.png)
+import MdxImage from "../../components/mdx/MdxImage.astro";
+import eggHatchedEvent from "../assets/naviary-system-04-domain-event/eggHatchedEvent.png";
+import resolveWire from "../assets/naviary-system-04-domain-event/resolve-wire.png";
 
 ## Introduction
 
@@ -87,10 +89,7 @@ The Egg domain notifies that it has hatched, and when the Chick domain hears the
 This loose coupling shines more as the system grows larger and the domain becomes more complex. Even if a requirement stating "Send an alert to those on the waitlist when an egg hatches" is added later, you don't need to modify `EggService` or other existing code; you simply create one method that subscribes to `EggHatchedEvent`.
 
 <div className="flex flex-col items-center justify-center text-center">
-  <img
-    src="/images/naviary-system-04-domain-event/eggHatchedEvent.png"
-    alt="eggHatchedEvent"
-  />
+  <MdxImage src={eggHatchedEvent} alt="eggHatchedEvent" />
 </div>
 
 ## Domain Event Modeling in Naviary
@@ -412,6 +411,10 @@ You can consider it a safeguard for achieving minimal data consistency.
 
 ## Conclusion
 
+<div className="flex flex-col items-center justify-center text-center">
+  <MdxImage src={resolveWire} alt="resolve-wire" />
+</div>
+
 Usually, people think of DDD or Domain Events as a fancy technology only used by large teams or in MSA environments. However, in an environment where you are designing and developing everything by yourself, there are times when these patterns exert even more power.
 
 Rather than doing it because "many people use it" or "because it's MSA,"
@@ -429,9 +432,3 @@ The philosophy I want to uphold the most while building the Naviary system is "c
 
 Because I don't just develop software, development productivity is even more important to me. I'll conclude this article hoping that these traces of contemplation will be of great help to myself when maintaining this system in the future.
 
-<div className="flex flex-col items-center justify-center text-center">
-  <img
-    src="/images/naviary-system-04-domain-event/resolve-wire.png"
-    alt="resolve-wire"
-  />
-</div>

@@ -5,7 +5,7 @@ import Link from "../../components/Link.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getMessages } from "../../libs/i18n/messages";
 
-const posts = (await getCollection("enBlog"))
+const posts = (await getCollection("enBlog", ({ data }) => !data.draft))
   .sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
   )

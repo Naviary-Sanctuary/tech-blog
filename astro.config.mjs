@@ -19,6 +19,6 @@ export default defineConfig({
   },
   integrations: [mdx({
     syntaxHighlight: 'shiki',
-    shikiConfig: { theme: 'nord' }
+    shikiConfig: { theme: "material-theme" }
   })]
 });

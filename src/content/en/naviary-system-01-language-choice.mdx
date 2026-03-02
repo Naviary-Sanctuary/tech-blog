@@ -5,7 +5,7 @@ date: "2026-01-21"
 category: "BREEDING SYSTEM"
 tags: ["TypeScript", "Language Choice", "DDD", "Tech Stack"]
 author: "naviary"
-coverImage: "/images/naviary-system-01-language-choice/parrot-typescript.png"
+heroImage: "../assets/naviary-system-01-language-choice/parrot-typescript.png"
 draft: false
 series: "Naviary System Development"
 seriesOrder: 1
@@ -77,8 +77,6 @@ Most Go ORMs are centered around query builders or raw queries. While GORM is sa
 
 Since the Naviary system involves complex relationships between real-world domains, I decided that Go's ORM was unsuitable for me in terms of productivity.
 
----
-
 ### Kotlin
 
 #### From a Linguistic Perspective
@@ -122,8 +120,6 @@ The JVM consumes a lot of memory. Build times are also slow, and it's burdensome
 In a breeding center with high initial costs, I didn't want to face issues like having to scale up the server just because of the language choice.
 The Spring ecosystem was also a bit difficult for me. While it might be good to have things strictly defined like in Spring, I thought its abstractions were so well-done that it was hard for me to understand the underlying principles.
 Of course, if I were running a breeding center, I'd have plenty of time at night, so I could study then... :)
-
----
 
 ### Gleam
 
@@ -173,8 +169,6 @@ pub fn wean(parrot: Parrot) -> Result(Parrot, String) {
 While being a functional language helped with productivity, the Naviary system involves complex logic like genetic tracking and coefficient of inbreeding calculations.
 Since I had mostly used object-oriented languages, I wasn't confident that I could clearly express such complex logic using functional programming.
 Additionally, I felt Gleam's ecosystem was still too immature. As a relatively new language, there weren't many references to look to, so I decided to set it aside for now.
-
----
 
 ### TypeScript
 

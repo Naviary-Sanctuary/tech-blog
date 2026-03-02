@@ -2,7 +2,7 @@ import { defineCollection } from "astro:content";
 import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
 
-const schema = z.object({
+const schema = ({ image }: { image: (opts?: { inferSize?: boolean }) => any }) => z.object({
   // basic information
   title: z.string(),
   description: z.string(),
@@ -21,7 +21,7 @@ const schema = z.object({
   tags: z.array(z.string()),
 
   // etc
-  heroImage: z.string().optional(),
+  heroImage: image().optional(),
   draft: z.boolean().default(false),
 
 })

@@ -1,13 +1,14 @@
 ---
 interface Props {
   className?: string;
+  link?: string;
 }
 
-const { className } = Astro.props;
+const { className, link } = Astro.props;
 ---
 
 <a
-  href="https://github.com/naviary-sanctuary"
+  href={link ?? "https://github.com/naviary-sanctuary"}
   target="_blank"
   class={className}
 >

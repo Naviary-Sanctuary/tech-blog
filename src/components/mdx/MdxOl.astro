@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from "astro/types";
+interface Props extends HTMLAttributes<"ol"> {}
+const { class: className, ...rest } = Astro.props;
+---
+
+<ol
+  {...rest}
+  data-list-type="ol"
+  class:list={[
+    "list-none space-y-3 my-6 text-zinc-700/90",
+    "[counter-reset:mdx-ol-counter]",
+    "[&_ol]:my-2 [&_ul]:my-2",
+    className,
+  ]}
+>
+  <slot />
+</ol>

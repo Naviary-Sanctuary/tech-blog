@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from "astro/types";
+interface Props extends HTMLAttributes<"li"> {}
+const { class: className, ...rest } = Astro.props;
+---
+
+<li
+  {...rest}
+  class:list={[
+    "relative pl-8 group/li",
+    /* OL list item styles (circled numbers) */
+    "in-data-[list-type='ol']:before:absolute in-data-[list-type='ol']:before:left-0 in-data-[list-type='ol']:before:top-[0.35em]",
+    "in-data-[list-type='ol']:before:flex in-data-[list-type='ol']:before:items-center in-data-[list-type='ol']:before:justify-center",
+    "in-data-[list-type='ol']:before:w-[1.4em] in-data-[list-type='ol']:before:h-[1.4em] in-data-[list-type='ol']:before:rounded-full",
+    "in-data-[list-type='ol']:before:bg-primary/20 in-data-[list-type='ol']:before:text-tertiary/90 in-data-[list-type='ol']:before:text-[0.75em] in-data-[list-type='ol']:before:font-bold",
+    "in-data-[list-type='ol']:before:[counter-increment:mdx-ol-counter] in-data-[list-type='ol']:before:content-[counter(mdx-ol-counter)]",
+    className,
+  ]}
+>
+  <slot />
+</li>

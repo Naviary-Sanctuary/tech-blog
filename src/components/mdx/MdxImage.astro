@@ -1,0 +1,31 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type ImageMetaLike = {
+  src: string;
+  width?: number;
+  height?: number;
+};
+
+interface Props extends Omit<HTMLAttributes<"img">, "src"> {
+  src: string | ImageMetaLike;
+}
+
+const { src, class: className, alt = "", width, height, ...rest } = Astro.props;
+
+const resolvedSrc = typeof src === "string" ? src : src.src;
+const resolvedWidth =
+  width ?? (typeof src === "string" ? undefined : src.width);
+const resolvedHeight =
+  height ?? (typeof src === "string" ? undefined : src.height);
+---
+
+<img
+  src={resolvedSrc}
+  alt={alt}
+  loading="lazy"
+  width={resolvedWidth}
+  height={resolvedHeight}
+  {...rest}
+  class:list={["my-8 w-full rounded-xl border border-zinc-200", className]}
+/>
