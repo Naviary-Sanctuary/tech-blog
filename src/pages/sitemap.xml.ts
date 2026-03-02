@@ -7,7 +7,7 @@ type SitemapEntry = {
 };
 
 const PAGE_SIZE = 5;
-const DEFAULT_SITE_URL = "https://tech.navaiary.io";
+const DEFAULT_SITE_URL = "https://tech.naviary.io";
 
 const toSiteUrl = (site?: URL) =>
   (site?.toString() ?? DEFAULT_SITE_URL).replace(/\/$/, "");
@@ -99,14 +99,14 @@ export const GET: APIRoute = async ({ site }) => {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${[...entries.values()]
-  .sort((a, b) => a.loc.localeCompare(b.loc))
-  .map((entry) => {
-    const lastmodTag = entry.lastmod
-      ? `\n    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`
-      : "";
-    return `  <url>\n    <loc>${escapeXml(entry.loc)}</loc>${lastmodTag}\n  </url>`;
-  })
-  .join("\n")}
+      .sort((a, b) => a.loc.localeCompare(b.loc))
+      .map((entry) => {
+        const lastmodTag = entry.lastmod
+          ? `\n    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`
+          : "";
+        return `  <url>\n    <loc>${escapeXml(entry.loc)}</loc>${lastmodTag}\n  </url>`;
+      })
+      .join("\n")}
 </urlset>`;
 
   return new Response(xml, {

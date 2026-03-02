@@ -4,7 +4,7 @@ import vercel from '@astrojs/vercel';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  site: "https://tech.navaiary.io",
+  site: "https://tech.naviary.io",
   output: "static",
   adapter: vercel(),
   vite: {

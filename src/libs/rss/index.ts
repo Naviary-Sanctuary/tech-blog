@@ -22,7 +22,7 @@ type CreateRssXmlParams = {
   entries: FeedEntry[];
 };
 
-const DEFAULT_SITE_URL = "https://tech.navaiary.io";
+const DEFAULT_SITE_URL = "https://tech.naviary.io";
 
 const escapeXml = (value: string) =>
   value
