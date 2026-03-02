@@ -36,18 +36,17 @@ const mdxComponents = {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection("enBlog");
+  const sortedPosts = (
+    await getCollection("enBlog", ({ data }) => !data.draft)
+  ).sort(
+    (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
+  );
 
-  return posts
-    .toSorted(
-      (a, b) =>
-        new Date(a.data.date).getTime() - new Date(b.data.date).getTime(),
-    )
-    .map((post, index) => {
-      const prevPost = posts[index - 1];
-      const nextPost = posts[index + 1];
-      return { params: { slug: post.id }, props: { post, prevPost, nextPost } };
-    });
+  return sortedPosts.map((post, index) => {
+    const prevPost = sortedPosts[index + 1];
+    const nextPost = sortedPosts[index - 1];
+    return { params: { slug: post.id }, props: { post, prevPost, nextPost } };
+  });
 };
 
 const { post, prevPost, nextPost } = Astro.props;
