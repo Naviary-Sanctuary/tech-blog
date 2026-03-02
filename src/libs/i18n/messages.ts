@@ -22,12 +22,18 @@ type PostMessage = {
   prevPost: string;
   nextPost: string;
 }
+type OpenSourceMessage = {
+  title: string;
+  description: string;
+}
 
 type Messages = {
   home: HomeMessage;
   articles: ArticleMessage;
   post: PostMessage;
+  openSource: OpenSourceMessage;
 }
+
 
 export const messages: Record<Locale, Messages> = {
   ko: {
@@ -50,6 +56,10 @@ export const messages: Record<Locale, Messages> = {
       backToList: "목록으로",
       prevPost: "이전 게시글",
       nextPost: "다음 게시글",
+    },
+    openSource: {
+      title: "Open Source",
+      description: "Build, use, and share.",
     }
   },
   en: {
@@ -72,6 +82,10 @@ export const messages: Record<Locale, Messages> = {
       backToList: "Back to List",
       prevPost: "Previous Article",
       nextPost: "Next Article",
+    },
+    openSource: {
+      title: "Open Source",
+      description: "Build, use, and share.",
     }
   }
 }

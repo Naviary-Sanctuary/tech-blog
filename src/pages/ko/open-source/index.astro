@@ -1,0 +1,75 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Title from "../../../components/Title.astro";
+import Divider from "../../../components/Divider.astro";
+import { openSources } from "./data";
+import { getMessages } from "../../../libs/i18n/messages";
+const t = getMessages("ko").openSource;
+---
+
+<BaseLayout title={t.title} description={t.description}>
+  <!-- Open Source Section -->
+  <section
+    class="max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col"
+  >
+    <!-- Open Source header -->
+    <div class="mb-3 flex items-end justify-between">
+      <Title>Open Source</Title>
+    </div>
+    <!-- Open Source -->
+    <div class="flex flex-col gap-10 mt-12">
+      {
+        openSources.map((openSource, index) => (
+          <>
+            <div class="flex flex-col gap-3 group">
+              <div class="flex flex-col sm:flex-row sm:gap-4 sm:items-center gap-1.5">
+                <h2 class="text-xl font-bold tracking-tight text-primary">
+                  {openSource.title}
+                </h2>
+                <span class="inline-flex w-fit items-center rounded-md border border-zinc-300/70 px-2 py-0.5 text-[11px] font-medium tracking-wide bg-tertiary/10 text-secondary/90">
+                  {openSource.language}
+                </span>
+              </div>
+              <p class="text-[15px] sm:text-base text-secondary/80 leading-relaxed break-keep mt-1">
+                {openSource.description}
+              </p>
+              <div class="flex gap-4 items-center mt-2">
+                <a
+                  href={openSource.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-sm font-medium text-secondary/60 hover:text-primary transition-colors"
+                >
+                  GitHub
+                  <span class="material-symbols-outlined text-[15px] mb-px">
+                    open_in_new
+                  </span>
+                </a>
+                {openSource.homepage && (
+                  <a
+                    href={openSource.homepage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-sm font-medium text-secondary/60 hover:text-primary transition-colors"
+                  >
+                    Homepage
+                    <span class="material-symbols-outlined text-[15px] mb-px">
+                      open_in_new
+                    </span>
+                  </a>
+                )}
+              </div>
+            </div>
+            {index !== openSources.length - 1 && <Divider />}
+          </>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
+</style>
