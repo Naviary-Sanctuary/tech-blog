@@ -10,30 +10,32 @@ type HomeMessage = {
   heroBody3: string;
   heroBody4: string;
   readMore: string;
-}
+  brandCtaEyebrow: string;
+  brandCtaLabel: string;
+  brandCtaCaption: string;
+};
 
 type ArticleMessage = {
   title: string;
   description: string;
-}
+};
 
 type PostMessage = {
   backToList: string;
   prevPost: string;
   nextPost: string;
-}
+};
 type OpenSourceMessage = {
   title: string;
   description: string;
-}
+};
 
 type Messages = {
   home: HomeMessage;
   articles: ArticleMessage;
   post: PostMessage;
   openSource: OpenSourceMessage;
-}
-
+};
 
 export const messages: Record<Locale, Messages> = {
   ko: {
@@ -47,6 +49,9 @@ export const messages: Record<Locale, Messages> = {
       heroBody3: "브리딩을 설계 가능한 시스템으로 전환합니다.",
       heroBody4: "이곳은 그 과정을 기록하는 기술 아카이브입니다.",
       readMore: "더보기",
+      brandCtaEyebrow: "브랜드 바로가기",
+      brandCtaLabel: "Naviary 브랜드 페이지",
+      brandCtaCaption: "브랜드 메인에서 서비스 비전을 확인해 보세요.",
     },
     articles: {
       title: "Articles",
@@ -60,7 +65,7 @@ export const messages: Record<Locale, Messages> = {
     openSource: {
       title: "Open Source",
       description: "Build, use, and share.",
-    }
+    },
   },
   en: {
     home: {
@@ -73,6 +78,9 @@ export const messages: Record<Locale, Messages> = {
       heroBody3: "transforming breeding into an engineered system.",
       heroBody4: "This is a technical archive documenting our journey.",
       readMore: "Read More",
+      brandCtaEyebrow: "Brand Hub",
+      brandCtaLabel: "Visit Naviary Brand",
+      brandCtaCaption: "Explore the main brand site and product vision.",
     },
     articles: {
       title: "Articles",
@@ -86,9 +94,9 @@ export const messages: Record<Locale, Messages> = {
     openSource: {
       title: "Open Source",
       description: "Build, use, and share.",
-    }
-  }
-}
+    },
+  },
+};
 
 export const getMessages = (locale: string) =>
   messages[locale as Locale];
