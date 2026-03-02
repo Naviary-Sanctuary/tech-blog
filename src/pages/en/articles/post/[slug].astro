@@ -116,7 +116,9 @@ const structuredData = {
       href="/articles"
       class="group flex items-center gap-1.5 w-fit text-secondary/80 hover:text-primary transition-colors"
     >
-      <ArrowLeftIcon className="size-5 transition-transform group-hover:-translate-x-1" />
+      <ArrowLeftIcon
+        className="size-5 transition-transform group-hover:-translate-x-1"
+      />
       <span class="text-sm font-medium">{t.backToList}</span>
     </Link>
     <article class="flex flex-col gap-4 min-w-0">
@@ -126,9 +128,9 @@ const structuredData = {
         >
           {post.data.category}
         </div>
-        <span
-          class="shrink-0 pt-1 w-fit whitespace-nowrap text-xs sm:text-sm tracking-wide text-zinc-400"
-          >{post.data.date}</span
+        <time
+          class="shrink-0 pt-1 w-fit whitespace-nowrap text-xs sm:text-sm tracking-wide text-zinc-500"
+          >{post.data.date}</time
         >
       </div>
       <h1
