@@ -35,7 +35,7 @@ const mdxComponents = {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 export const getStaticPaths = async () => {
-  const posts = await getCollection("koBlog");
+  const posts = await getCollection("enBlog");
 
   return posts.map((post, index) => {
     const prevPost = posts[index - 1];
@@ -46,13 +46,13 @@ export const getStaticPaths = async () => {
 
 const { post, prevPost, nextPost } = Astro.props;
 
-const t = getMessages("ko").post;
+const t = getMessages("en").post;
 const { Content } = await render(post);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
   <div
-    class="max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col gap-10"
+    class="w-full max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col gap-10 min-w-0"
   >
     <Link
       href="/articles"
@@ -64,7 +64,7 @@ const { Content } = await render(post);
       >
       <span class="text-sm font-medium">{t.backToList}</span>
     </Link>
-    <article class="flex flex-col gap-4">
+    <article class="flex flex-col gap-4 min-w-0">
       <div class="flex gap-4 items-center">
         <div
           class="inline-flex w-fit items-center rounded-[4px] border border-zinc-300/70 px-2 py-0.5 text-[11px] font-medium tracking-wide text-secondary"
@@ -87,7 +87,7 @@ const { Content } = await render(post);
         class="w-full aspect-video md:aspect-2/1 object-cover rounded-2xl mb-8 border border-zinc-200/50"
       />
       <div
-        class="prose prose-zinc max-w-none text-secondary/90 leading-[1.75] md:text-lg tracking-tight"
+        class="prose prose-zinc max-w-none text-secondary/90 leading-[1.75] md:text-lg tracking-tight min-w-0"
       >
         <Content components={mdxComponents} />
       </div>
