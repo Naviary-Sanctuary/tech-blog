@@ -12,7 +12,7 @@ export const openSources: OpenSource[] = [
     language: "Dart",
     description: "an offline-first parrot food safety app by naviary",
     github: "https://github.com/naviary-sanctuary/avium",
-    homepage: "https://avium.naviary.com"
+    homepage: "https://avium.naviary.io"
   },
   {
     title: "kinship",
