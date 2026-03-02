@@ -1,6 +1,8 @@
 ---
 import GithubIcon from "./icons/GithubIcon.astro";
 import RssIcon from "./icons/RssIcon.astro";
+
+const lang = Astro.currentLocale || "ko";
 ---
 
 <footer class="bg-background-footer text-footer py-16">
@@ -14,7 +16,7 @@ import RssIcon from "./icons/RssIcon.astro";
       <div class="flex items-center gap-6">
         <a
           class="hover:text-primary transition-colors"
-          href="#"
+          href={`/${lang}/rss.xml`}
           title="RSS Feed"
         >
           <RssIcon />

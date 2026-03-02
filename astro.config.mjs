@@ -4,6 +4,7 @@ import cloudflare from '@astrojs/cloudflare';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
+  site: "https://tech.navaiary.io",
   output: "static",
   adapter: cloudflare({ platformProxy: { enabled: true } }),
   vite: {

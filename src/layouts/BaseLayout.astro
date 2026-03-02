@@ -21,6 +21,7 @@ const currentPath = Astro.url.pathname;
 const path = currentPath.replace(/^\/(ko|en)/, "");
 const canonicalUrl = `${siteUrl}${currentPath}`;
 const ogImageUrl = new URL(imageUrl, siteUrl).toString();
+const localizedRssUrl = `${siteUrl}/${lang}/rss.xml`;
 ---
 
 <html lang={lang}>
@@ -36,6 +37,12 @@ const ogImageUrl = new URL(imageUrl, siteUrl).toString();
     <link rel="alternate" hreflang="ko" href={`${siteUrl}/ko${path}`} />
     <link rel="alternate" hreflang="en" href={`${siteUrl}/en${path}`} />
     <link rel="alternate" hreflang="x-default" href={`${siteUrl}/ko${path}`} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Naviary Tech Blog RSS Feed"
+      href={localizedRssUrl}
+    />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Naviary Tech Blog" />
