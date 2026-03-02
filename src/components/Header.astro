@@ -7,8 +7,6 @@ import LanguageSelect from "./LanguageSelect.astro";
 const lang = Astro.currentLocale || "ko";
 const currentPath = Astro.url.pathname;
 const cleanPath = currentPath.replace(/^\/(ko|en)/, "") || "/";
-const targetLang = lang === "ko" ? "en" : "ko";
-const targetPath = `/${targetLang}${cleanPath}`;
 
 const menus = navigationItems.map((item) => {
   const href = `/${lang}${item.href}`;
@@ -25,9 +23,9 @@ const menus = navigationItems.map((item) => {
     <!-- logo -->
     <div class="flex items-center">
       <a href={`/${lang}/`} class="group">
-        <h1 class="text-zinc-900 font-bold text-xl tracking-tight">
+        <span class="text-zinc-900 font-bold text-xl tracking-tight">
           Naviary.Tech
-        </h1>
+        </span>
       </a>
     </div>
 
@@ -49,12 +47,7 @@ const menus = navigationItems.map((item) => {
     </nav>
 
     <div class="md:hidden flex items-center gap-4">
-      <a
-        href={targetPath}
-        class="text-[12px] font-bold text-zinc-700 hover:text-primary transition-colors uppercase"
-      >
-        {targetLang}
-      </a>
+      <LanguageSelect currentLanguage={lang} path={cleanPath} />
       <button
         id="mobile-menu-button"
         class="inline-flex items-center justify-center size-9 rounded-md border border-zinc-200 text-zinc-700 hover:text-primary active:scale-95 transition-all"

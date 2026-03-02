@@ -37,11 +37,16 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 export const getStaticPaths = async () => {
   const posts = await getCollection("enBlog");
 
-  return posts.map((post, index) => {
-    const prevPost = posts[index - 1];
-    const nextPost = posts[index + 1];
-    return { params: { slug: post.id }, props: { post, prevPost, nextPost } };
-  });
+  return posts
+    .toSorted(
+      (a, b) =>
+        new Date(a.data.date).getTime() - new Date(b.data.date).getTime(),
+    )
+    .map((post, index) => {
+      const prevPost = posts[index - 1];
+      const nextPost = posts[index + 1];
+      return { params: { slug: post.id }, props: { post, prevPost, nextPost } };
+    });
 };
 
 const { post, prevPost, nextPost } = Astro.props;
@@ -57,17 +62,22 @@ const toAbsoluteImageUrl = (value: string | { src: string } | undefined) => {
   const source =
     typeof value === "string"
       ? value
-      : value?.src ?? "/images/naviary_logo.png";
+      : (value?.src ?? "/images/naviary_logo.png");
   return new URL(source, siteUrl).toString();
 };
+
+const publishedAtIso = new Date(post.data.date).toISOString();
+const modifiedAtIso = new Date(
+  post.data.updatedDate ?? post.data.date,
+).toISOString();
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "BlogPosting",
   headline: post.data.title,
   description: post.data.description,
   inLanguage: "en-US",
-  datePublished: new Date(post.data.date).toISOString(),
-  dateModified: new Date(post.data.updatedDate ?? post.data.date).toISOString(),
+  datePublished: publishedAtIso,
+  dateModified: modifiedAtIso,
   mainEntityOfPage: {
     "@type": "WebPage",
     "@id": canonicalUrl,
@@ -94,6 +104,9 @@ const structuredData = {
   description={post.data.description}
   imageUrl={post.data.heroImage}
   structuredData={structuredData}
+  ogType="article"
+  articlePublishedTime={publishedAtIso}
+  articleModifiedTime={modifiedAtIso}
 >
   <div
     class="w-full max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col gap-10 min-w-0"
