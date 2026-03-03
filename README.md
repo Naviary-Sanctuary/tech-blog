@@ -1,43 +1,29 @@
-# Astro Starter Kit: Minimal
+# Naviary Sanctuary Tech Blog
+
+Naviary는 앵무새 전문 생태계를 구축하는 브리딩센터입니다.  
+브리딩을 감(感)이 아닌 데이터와 구조로 설계하는 시스템을 지향합니다.
+개체 관리, 페어링 전략, 번식 효율, 혈통·건강 이력 관리까지 체계화하는 브리딩 시스템을 운영합니다.
+
+## Development
 
 ```sh
-bun create astro@latest -- --template minimal
+bun install
+bun dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Build
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```sh
+bun build
+bun preview
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## License Policy
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+이 저장소는 경로 기반 분리 라이선스 정책을 사용합니다.
 
-Any static assets, like images, can be placed in the `public/` directory.
+- 코드/설정 파일: [MIT License](./LICENSE)
+- `src/content/**`, `public/**`: [CC BY-NC-ND 4.0](./LICENSE-CONTENT)
+- 개별 파일에 별도 라이선스 고지가 있으면 해당 고지가 우선합니다.
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+자세한 내용은 [LICENSE](./LICENSE), [LICENSE-CONTENT](./LICENSE-CONTENT)를 확인해 주세요.

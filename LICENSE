@@ -1,5 +1,9 @@
 MIT License
 
+This license applies to source code and configuration files in this repository,
+except files under `src/content/**` and `public/**`.
+For those excluded paths, see [LICENSE-CONTENT](./LICENSE-CONTENT).
+
 Copyright (c) 2026 Naviary Sanctuary
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
