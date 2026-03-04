@@ -9,6 +9,9 @@ type HomeMessage = {
   heroBody2: string;
   heroBody3: string;
   heroBody4: string;
+  ctaToNaviary: string;
+  ctaDescription1: string;
+  ctaDescription2: string;
   readMore: string;
   brandCtaEyebrow: string;
   brandCtaLabel: string;
@@ -48,6 +51,9 @@ export const messages: Record<Locale, Messages> = {
       heroBody2: "우리는 개체와 번식의 흐름을 구조화하고,",
       heroBody3: "브리딩을 설계 가능한 시스템으로 전환합니다.",
       heroBody4: "이곳은 그 과정을 기록하는 기술 아카이브입니다.",
+      ctaToNaviary: "Explore Naviary",
+      ctaDescription1: "데이터 를 넘어 가치를 창출하는 여정.",
+      ctaDescription2: "나비어리 브랜드 사이트에서 우리의 비전과 서비스를 확인해보세요.",
       readMore: "더보기",
       brandCtaEyebrow: "브랜드 바로가기",
       brandCtaLabel: "Naviary 브랜드 페이지",
@@ -77,6 +83,9 @@ export const messages: Record<Locale, Messages> = {
       heroBody2: "We structure the flow of individuals and breeding,",
       heroBody3: "transforming breeding into an engineered system.",
       heroBody4: "This is a technical archive documenting our journey.",
+      ctaToNaviary: "Explore Naviary",
+      ctaDescription1: "The journey of creating value beyond data.",
+      ctaDescription2: "Discover our vision and services on the Naviary brand site.",
       readMore: "Read More",
       brandCtaEyebrow: "Brand Hub",
       brandCtaLabel: "Visit Naviary Brand",
