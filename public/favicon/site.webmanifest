@@ -1,19 +1,17 @@
 {
-  "name": "naviary",
-  "short_name": "naviary",
-  "description": "체스넛 마카우, 갈라 코카투 전문 브리딩 센터",
+  "name": "Naviary Tech Blog",
+  "short_name": "Naviary",
+  "description": "체스넛 마카우, 갈라 코카투 전문 브리딩 센터의 기술 블로그",
   "icons": [
     {
-      "src": "favicon/web-app-manifest-192x192.png",
+      "src": "/favicon/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     },
     {
-      "src": "favicon/web-app-manifest-512x512.png",
+      "src": "/favicon/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ],
   "theme_color": "#ffffff",
