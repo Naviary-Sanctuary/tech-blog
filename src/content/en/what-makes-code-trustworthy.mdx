@@ -1,0 +1,159 @@
+---
+title: "What Makes Code Trustworthy?"
+description: "Are tests evidence, or comfort? In an age of solo development and AI-assisted coding, what really makes code trustworthy?"
+date: "2026-03-18"
+category: "ENGINEERING"
+tags: ["Testing", "TDD", "AI", "Development Philosophy", "Naviary"]
+author: "naviary"
+heroImage: "../assets/what-makes-code-trustworthy/clocks.png"
+draft: false
+---
+## Introduction
+
+We have to believe that code is correct. If the code does not work, the product does not work.
+
+The real question is: what is that belief based on?
+
+Many developers say code is safe because it has tests. Others say it is fine because it was built with TDD. But is that really true?
+
+Can we trust code simply because tests exist?
+
+This question matters even more now, when AI is producing an enormous amount of code. We are increasingly accepting code we do not fully understand. I do this too. Sometimes I catch myself thinking, "It works, so it must be fine. There are tests too, so it should be okay."
+
+But trusting code is ultimately a question of what has actually been verified.
+
+## The Illusion of Tests
+
+A test passed. Does that mean the code is trustworthy?
+
+Tests do not prove that code is correct. They only show that an assumption we made passed within the scope we prepared.
+
+Consider this example.
+
+You are a developer running a service in the United States. Somewhere in the service, there is logic that displays a UTC timestamp in New York local time.
+
+So you write a function like this:
+
+```typescript
+function toNewYorkTime(utcDate: Date) {
+  const NEW_YORK_OFFSET = -5 * 60 * 60 * 1000; // -5 hours
+  return new Date(utcDate.getTime() + NEW_YORK_OFFSET);
+}
+```
+
+Now let us write a test to gain confidence in this function.
+
+```typescript
+describe("toNewYorkTime", () => {
+  test("converts to New York time", () => {
+    const utc = new Date("2026-01-01T05:00:00.000Z");
+    expect(toNewYorkTime(utc)).toEqual(new Date("2026-01-01T00:00:00.000Z"));
+  });
+});
+```
+The test will pass. For a while, this may even seem to work fine in production.
+
+But this logic will break in the summer. What we overlooked is not a simple implementation bug. It is a more fundamental misunderstanding of time zones.
+
+New York is not always UTC-5. America/New_York is sometimes UTC-5 and sometimes UTC-4 depending on the season. Once daylight saving time begins, the logic above will drift by an hour.
+
+In other words, what this test proved was not "it converts to New York time." It only proved "it shifts time by five hours."
+
+Tests are not always evidence of truth. When tests share the same flawed assumption, they merely confirm what we already wanted to believe.
+
+## Tests in the Age of AI
+
+This problem becomes even clearer in the age of AI. AI is overwhelming humans in the speed and volume of code it can produce.
+
+But understanding the problem, taking responsibility for context, and deciding what actually needs to be verified is still a human responsibility.
+
+If you describe requirements vaguely, AI will generate a plausible implementation. It will also generate tests plausible enough to pass. But if the implementation and the tests share the same misunderstanding, can we really call that verification?
+
+When implementation and tests share the same misunderstanding, those tests cannot validate or protect the logic. Instead, they can make false confidence feel even more solid.
+
+So does that mean tests matter less in the age of AI? Not at all. They matter more. What matters now is not writing more tests. What matters is making sharper decisions about what should actually be verified.
+
+In that sense, tests can also serve as a guide for AI. They can provide direction in ways a prompt alone often cannot.
+
+## Thoughts on TDD
+
+I like testing business logic.
+
+But that does not mean I think TDD should always be the default.
+
+Whenever I look at a methodology, the first question I ask is this: what problem was this method created to solve?
+
+TDD makes requirements clearer by forcing you to write tests first, and it helps refine design inside a small feedback loop. It also has the advantage of making interfaces harder to change carelessly. In that sense, TDD is clearly useful.
+
+What always makes me hesitate, however, is that it can create confidence too early, even when the problem itself is not yet fully understood. Early requirements change often. Business rules are often unstable in the beginning.
+
+If you write tests too early, the assumptions you first came up with may harden before the rules you actually need to preserve become clear.
+
+At that point, tests stop being a tool for validation and start becoming a record of prejudice.
+
+That is why I see TDD less as a principle and more as a tool. In areas where inputs and outputs are clear, where calculations are explicit, or where business rules are already well understood, it can be undeniably helpful.
+
+On the other hand, when the concepts are still unstable and the requirements themselves are still being explored, there are times when you need to spend more time understanding the problem before writing tests.
+
+What I am wary of is not TDD itself. It is the attitude that tests must always come first in every situation.
+
+Methodologies exist to support thinking. They do not exist to replace it.
+
+## What I trust
+
+What I trust is not a test that follows the shape of the implementation.
+
+What I trust is a test that captures a promise the system must keep.
+
+While building the breeding system, these are the kinds of tests I write. Here is a simple example.
+
+In Naviary, each egg bred in the system is assigned a unique identifier. Its format looks like this:
+
+`260317-25P01-1-005`
+
+- 260317: date of birth, in KST
+- 25P01: the parent pair's pairId
+- 1: the first clutch
+- 005: the egg's sequence number within that clutch for that pair
+
+This kind of business rule does not change easily. That is exactly why I think it is worth testing.
+
+What matters here is that this ID rule is an explicit promise in the domain.
+
+```typescript
+describe("generateId Test", () => {
+  test("generates an egg ID from the laying date, parent code, clutch, and sequence", () => {
+    const id = Egg.generateId({
+      laidAt: new Date("2025-07-20T20:00:00.000Z"),
+      pairId: "25P01",
+      clutch: 1,
+      sequence: 5,
+    });
+    expect(id).toBe("250721-25P01-1-005");
+  });
+});
+```
+
+It makes sense to verify this first with a unit test, and later prepare actual parent pair data and egg data for an integration test as well.
+
+If you asked me how far testing should go, I would probably answer: until you are no longer anxious.
+
+## Conclusion
+
+A codebase with many tests can look safe.
+
+But I am not sure that always makes it trustworthy.
+
+At a previous company, I owned a quotation system. There were more than a hundred test cases just for the pricing logic. And yet bugs still happened. Bugs always show up in places you did not expect.
+
+The formulas changed frequently, and every time they did, those hundred-plus test cases became a burden. By the time the logic finally stabilized, the bugs had mostly stopped appearing anyway.
+
+Looking back, I think I was writing many of those tests to reassure myself.
+
+To me, tests are evidence of the business logic I am responsible for protecting. In practice, the tests changed a lot too, because the business logic itself kept changing.
+
+Even so, those tests were still a way of leaving behind evidence, outside the code itself, of how that logic was supposed to behave.
+
+When the promises a system must keep are written down in tests, I can trust that code a little more.
+
+In the age of AI, tests can become a compass that preserves direction in ways prompts alone cannot.
