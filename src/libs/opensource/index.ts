@@ -8,13 +8,6 @@ type OpenSource = {
 
 export const openSources: OpenSource[] = [
   {
-    title: "Avium",
-    language: "Dart",
-    description: "an offline-first parrot food safety app by naviary",
-    github: "https://github.com/naviary-sanctuary/avium",
-    homepage: "https://avium.naviary.io"
-  },
-  {
     title: "kinship",
     description: "A TypeScript toolkit for modeling, validating, and querying pedigree DAGs with explainable diagnostics.",
     github: "https://github.com/naviary-sanctuary/kinship",
