@@ -8,6 +8,12 @@ type OpenSource = {
 
 export const openSources: OpenSource[] = [
   {
+    title: "navi-di",
+    description: "A dependency injection container built for standard ECMAScript decorators.",
+    github: "https://github.com/Naviary-Sanctuary/navi-di",
+    language: "Typescript",
+  },
+  {
     title: "kinship",
     description: "A TypeScript toolkit for modeling, validating, and querying pedigree DAGs with explainable diagnostics.",
     github: "https://github.com/naviary-sanctuary/kinship",
