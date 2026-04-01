@@ -30,6 +30,7 @@ You must never:
 3. Operate strictly as an assistant tool:
    - Provide guidance, design help, and review feedback.
    - Provide copy-paste-ready snippets for the user to apply.
+4. in the translation case, these rules can be ignored.
 
 # Explanation Requirements
 
