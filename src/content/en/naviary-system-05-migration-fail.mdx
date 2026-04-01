@@ -1,0 +1,263 @@
+---
+title: "Naviary System Development #5: Backend - Why My ES Decorator Migration Failed"
+description: "A brutal migration story I jumped into too quickly because of the word 'standard'. This post shares the limitations I ran into and why I ultimately gave up on the migration."
+date: "2026-04-02"
+category: "BREEDING SYSTEM"
+tags: ["TypeScript", "ES Decorator", "MikroORM", "Dependency Injection", "Migration", "Naviary"]
+author: "naviary"
+heroImage: "../assets/naviary-system-04-domain-event/egg-hatching.png"
+draft: false
+series: "Naviary System Development"
+seriesOrder: 5
+---
+
+## Introduction
+
+Recently, the major version of MikroORM I use was upgraded to version 7. The most noticeable changes were the separation of the decorator package and the official adoption of ES Decorators.
+
+ES Decorators are the standard decorator proposal currently at TC39 Stage 3. TypeScript started supporting them in version 5, and Bun also began properly supporting them starting from 1.3.10.
+
+I figured TypeScript would eventually follow the ECMAScript standard anyway, and if I was going to have to migrate someday, I might as well try it during this upgrade. I started the migration with that lighthearted mindset.
+
+It turned into a disaster.
+
+In this post, I want to walk through that entire process.
+
+## ES Decorators
+
+First, we need to briefly compare the **legacy TypeScript decorators** we have been using with `experimentalDecorators: true` in `tsconfig.json` and the new **ES standard decorators (Stage 3)**.
+
+On the surface, they look the same because they are both written as `@Decorator`, but their internal behavior and interfaces are completely different.
+
+### How the Functions Are Written
+
+#### Legacy
+
+Legacy decorators received the target object, the property name, and the descriptor directly when modifying a class or method.
+
+```typescript
+function LegacyLog() {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value; // back up the original method
+    
+    // directly replace the method by mutating the descriptor
+    descriptor.value = function (...args: any[]) {
+      console.log(`[Legacy] ${propertyKey} method called. args:`, args);
+      return originalMethod.apply(this, args);
+    };
+    
+    return descriptor;
+  };
+}
+
+class UserService {
+  @LegacyLog()
+  getUser(id: string) {
+    return { id, name: "Naviary" };
+  }
+}
+
+const service = new UserService();
+service.getUser("123"); // [Legacy] getUser method called. args: [ '123' ]
+```
+
+#### ES Standard Decorators (Stage 3)
+
+The ES standard is much more structured and closer to a functional style. Instead of directly receiving and mutating an object, it receives the original function being decorated (`value`) and a safe metadata object called `context`, then returns a new function.
+
+Also, unlike legacy decorators, it does not directly mutate the target object. Instead, it replaces the value by returning a new one or by using initialization hooks.
+
+```typescript
+function ESLog() {
+  return function (value: Function, context: ClassMethodDecoratorContext) {
+    
+    // replace the original function by returning a wrapped one
+    return function (this: any, ...args: any[]) {
+      console.log(`[ES] ${String(context.name)} executed`);
+      return value.apply(this, args);
+    };
+  };
+}
+```
+
+### reflect-metadata
+
+I do welcome the cleaner API structure.
+
+With legacy decorators, enabling `emitDecoratorMetadata: true` let the compiler automatically inject runtime type information for class properties or constructor parameters. ES Decorators do not support that.
+
+There is `context.metadata`, which lets you store metadata, but the old magic that told you what type an object was at runtime is gone.
+
+## The Limits of DI Tools and the Birth of navi-di
+
+Naviary does not use NestJS, so I had been using TypeDI as my DI library. But it simply did not work in an ES Decorator environment.
+
+The reason is simple. TypeDI, NestJS, tsyringe, and most DI tools in the current ecosystem depend on the metadata emitted by legacy decorators. When I had built my own DI tools in the past, I also relied on the almost magical convenience of `reflect-metadata`.
+
+After looking around and failing to find anything suitable, I decided to build one myself: [navi-di](https://github.com/Naviary-Sanctuary/navi-di), a DI container library implemented with pure ES Decorators without relying on TypeScript metadata.
+
+I tried to make navi-di follow TypeDI's interface as closely as possible. The concept is similar too. You keep a container instance in memory, register injectable classes into it, and then resolve dependencies by looking up classes from that container.
+
+### `@Inject`: Collecting Injection Metadata
+
+`@Inject` does not inject anything immediately. Instead, it records which token should be injected into which field inside the `context.metadata` array.
+
+```typescript
+export function Inject<T>(dependency: ServiceIdentifier<T>) {
+  return function (_: undefined, context: ClassFieldDecoratorContext) {
+    const injections = (context.metadata[INJECTION_KEY] ??= []) as InjectionMetadata[];
+
+    injections.push({
+      id: dependency,
+      name: context.name,
+    });
+  };
+}
+```
+
+### `@Service`: Registering Services in the Container
+
+When the class decorator `@Service` is evaluated, it reads the metadata that all previous `@Inject` decorators have accumulated inside `context.metadata`. (Because all properties have to be evaluated before the class itself can be evaluated, `@Inject` is always evaluated before `@Service`.)
+
+Then it registers that information in the DI container along with the class itself.
+
+```typescript
+export function Service<T>(idOrOptions?: ServiceIdentifier | ServiceOption) {
+  return function (target: Constructable<T>, context: DecoratorContext) {
+    const options = normalizeArguments(idOrOptions);
+
+    // read the metadata collected by @Inject
+    const injections = (context.metadata[INJECTION_KEY] ?? []) as InjectionMetadata[];
+
+    ContainerRegistry.defaultContainer.register({
+      id: options?.id ?? target,
+      Class: target,
+      name: context.name,
+      injections,
+      scope: options?.scope ?? 'container',
+      value: EMPTY_VALUE,
+      multiple: options?.multiple,
+    });
+  };
+}
+```
+
+Later, when the container creates the service at runtime, it reads that `injections` field and wires up the proper dependencies by itself.
+
+## The Limitations of ES Decorators
+
+While building a DI tool called navi-di myself, I felt that ES Decorators had some limitations at the spec level.
+
+### No Parameter Decorators
+
+The current Stage 3 proposal does not include parameter decorators. People have raised the issue, but all we have for now is the expectation that they may be added in a future version.
+
+That means you cannot inject dependencies like this:
+
+```typescript
+@Service()
+export class ParrotService {
+  constructor(@Inject() private parrotRepository: ParrotRepository) {
+    ...
+  }
+}
+```
+
+Instead, you are forced to use property decorators.
+
+```typescript
+@Service()
+export class ParrotService {
+  @Inject(ParrotRepository)
+  parrotRepository!: ParrotRepository
+}
+```
+
+This makes unit testing much more inconvenient. Previously, I could just write something like `new ParrotService(mockedParrotRepository)`. After changing to field injection, it started to feel like I had to shove mocks in manually using things like `Object.defineProperty`.
+
+That increased both the cost of writing tests and the cost of migration.
+
+### Tokens Become Mandatory
+
+With TypeDI, `reflect-metadata` could automatically infer the type of the element being injected.
+
+```typescript
+@Service()
+export class ParrotService {
+  constructor(@Inject() private parrotRepository: ParrotRepository) {
+    ...
+  }
+}
+```
+
+In code like that, `@Inject` could infer that `parrotRepository` was of type `ParrotRepository`. But ES Decorators run at runtime, so that kind of magic is no longer possible. You now have to explicitly tell `Inject` what should be injected.
+
+```typescript
+@Service()
+export class Parrot {
+  @Inject(ParrotRepository) // explicitly tell it to inject ParrotRepository
+  parrotRepository!: ParrotRepository
+}
+```
+
+## Bun and MikroORM Compatibility Issues
+
+Even after dealing with all of the nonsense above, I still thought, "Well, the standard has to be better in the long run." So I kept going.
+
+By the time I had resolved the issues above, the migration already had more than 100 changed files. I had fixed all the compile errors. I could finally run it.
+
+And then I hit a runtime error.
+
+```bash
+Task PATH_SYMBOL = Task
+[info] MikroORM version: 7.0.4
+[discovery] ORM entity discovery started, using TsMorphMetadataProvider
+[discovery] - processing entity Task (Task)
+163 |       path = path.replace(new RegExp(`^${outDirRelative}`), '');
+164 |     }
+165 |     path = this.stripRelativePath(path);
+166 |     const source = this.sources.find(s => s.getFilePath().endsWith(path));
+167 |     if (!source && validate) {
+168 |       throw new MetadataError(
+                  ^
+MetadataError: Source file './Task' not found. Check your 'entitiesTs' option and verify you have 'compilerOptions.declaration' enabled in your 'tsconfig.json'. If you are using webpack, see https://bit.ly/35pPDNn
+ entity: undefined,
+```
+
+I was loading entity information by path, and since all of my entity data followed a similar pattern, I was handling them with a glob. But the path could no longer be resolved properly, so the entity was not recognized and the error was thrown.
+
+This happened because Bun 1.3.10 added support for native decorators, which changed the stack trace, and MikroORM's lookup fallback stopped working properly because of that.
+
+So to fix this problem, I ended up opening a [PR against MikroORM core](https://github.com/mikro-orm/mikro-orm/pull/7382), which at least became a valuable open-source contribution experience.
+
+## Why I Stopped
+
+The runtime error was resolved with the PR I submitted. (Of course, after that I ran into another issue where it failed to infer property types from a parent class, so I [opened an issue](https://github.com/mikro-orm/mikro-orm/issues/7389), and the maintainer handled that one.)
+
+But after that, more structural problems were waiting for me.
+
+Once I moved to MikroORM 7, using MikroORM's `Collection` object for table relationships became mandatory, which meant I had to modify a lot of existing domain logic. There were also a lot of API changes.
+
+So I gave up on ES Decorators and tried to migrate back to legacy decorators instead. (MikroORM 7 supports both ES decorators and legacy decorators.) But even that was not easy.
+
+A lot of the table generation inference logic and entity definition internals had changed in version 7, so things no longer behaved the way they used to. Fixing all of that felt less like a migration and more like rebuilding the whole thing from scratch. I would have had to touch almost every piece of code related to entities.
+
+In the end, the real problem was not whether it was technically possible. It was about cost versus value.
+
+I am no longer just someone who writes code all day. I also have to run a business now. Spending a long period of time stuck in a migration that fundamentally changes internal behavior is a huge burden. And even if I had more time, there are many other things I need to work on.
+
+## Conclusion
+
+In the end, I decided to roll Naviary's backend back to MikroORM 6 and the legacy decorator environment.
+
+I may try this migration again when I have more room to breathe. But even then, if structural problems continue to consume that much time, I plan to drop MikroORM entirely and switch to TypeORM without hesitation.
+
+TypeORM and MikroORM actually share more interface similarities than I expected, so I would not need to invest that many resources. And even if I did, the main extra piece I would have to build myself would probably be something like `@Transactional`.
+
+My attempt to move to standard decorators failed for now, but I still plan to keep maintaining [navi-di](https://github.com/Naviary-Sanctuary/navi-di), which I built for this migration.
+
+And when parameter decorators are officially added to ES Decorators and the ecosystem has matured enough, I plan to attempt a large-scale migration again. At that point, instead of relying on TypeDI, which is no longer maintained, I will use my own [navi-di](https://github.com/Naviary-Sanctuary/navi-di). It has already been tested enough on the actual server for me to trust it.
+
+I like trying newer technology, and I like following standards. But this experience taught me the hard way that migrating right now is not necessarily the correct answer in an operational environment, and that waiting for the ecosystem to mature can also be a very good strategy.
+
+Of course, going deep into the rabbit hole and rebuilding things from the ground up—like [yak shaving](https://parksb.github.io/article/32.html)—was also a fun experience. Open-source development and open-source contribution were fun too.
