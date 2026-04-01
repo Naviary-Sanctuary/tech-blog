@@ -156,7 +156,14 @@ const structuredData = {
   [&_h3]:mt-14
   [&_h3]:mb-5
   [&_h4]:mt-10
-  [&_h4]:mb-4"
+  [&_h4]:mb-4
+  [&_:not(pre)_>_code]:rounded-md
+  [&_:not(pre)_>_code]:bg-zinc-100
+  [&_:not(pre)_>_code]:px-1.5
+  [&_:not(pre)_>_code]:py-0.5
+  [&_:not(pre)_>_code]:text-[0.9em]
+  [&_:not(pre)_>_code]:font-semibold
+  [&_:not(pre)_>_code]:text-secondary/70"
       >
         <Content components={mdxComponents} />
       </div>
