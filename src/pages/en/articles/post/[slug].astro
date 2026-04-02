@@ -145,6 +145,9 @@ const structuredData = {
       <Image
         src={post.data.heroImage}
         alt={post.data.title}
+        priority
+        layout="full-width"
+        sizes="(max-width: 640px) calc(100vw - 2rem), (max-width:760px) calc(100vw - 3rem), 56rem"
         class="w-full aspect-video md:aspect-2/1 object-cover rounded-2xl mb-8 border border-zinc-200/50"
       />
       <div
