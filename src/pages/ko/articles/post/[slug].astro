@@ -18,6 +18,7 @@ import MdxLi from "../../../../components/mdx/MdxLi.astro";
 import ArrowLeftIcon from "../../../../components/icons/ArrowLeftIcon.astro";
 import { Image } from "astro:assets";
 import Divider from "../../../../components/Divider.astro";
+import TableOfContents from "../../../../components/TableOfContents.astro";
 
 const mdxComponents = {
   h1: MdxH1,
@@ -52,7 +53,10 @@ export const getStaticPaths = async () => {
 const { post, prevPost, nextPost } = Astro.props;
 
 const t = getMessages("ko").post;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const tocHeadings = headings.filter(
+  (heading) => heading.depth >= 2 && heading.depth <= 4,
+);
 const siteUrl = (Astro.site?.toString() ?? "https://tech.naviary.io").replace(
   /\/$/,
   "",
@@ -65,7 +69,6 @@ const toAbsoluteImageUrl = (value: string | { src: string } | undefined) => {
       : (value?.src ?? "/images/naviary_logo.png");
   return new URL(source, siteUrl).toString();
 };
-
 const publishedAtIso = new Date(post.data.date).toISOString();
 const modifiedAtIso = new Date(
   post.data.updatedDate ?? post.data.date,
@@ -108,6 +111,7 @@ const structuredData = {
   articlePublishedTime={publishedAtIso}
   articleModifiedTime={modifiedAtIso}
 >
+  <TableOfContents title={t.tableOfContents} headings={tocHeadings} />
   <div
     class="w-full max-w-4xl mx-auto py-12 md:py-20 px-4 sm:px-6 min-h-[80dvh] flex flex-col gap-10 min-w-0"
   >

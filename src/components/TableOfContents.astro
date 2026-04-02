@@ -1,0 +1,116 @@
+---
+type Heading = {
+  depth: number;
+  slug: string;
+  text: string;
+};
+
+interface Props {
+  title: string;
+  headings: Heading[];
+}
+
+const { title, headings } = Astro.props;
+---
+
+{
+  headings.length >= 2 && (
+    <aside
+      class="hidden 2xl:block fixed top-44 left-[calc(50%+28rem)] w-72"
+      data-toc-root
+    >
+      <div class="w-full rounded-2xl bg-white/30 backdrop-blur-sm p-4">
+        <p class="text-xs font-semibold tracking-[0.16em] text-secondary/60 uppercase">
+          {title}
+        </p>
+        <nav class="mt-4" aria-label={title}>
+          <ul class="space-y-1.5">
+            {headings.map((heading) => (
+              <li
+                class:list={[
+                  heading.depth === 3 && "ml-4",
+                  heading.depth === 4 && "ml-10",
+                ]}
+              >
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-link
+                  data-toc-target={heading.slug}
+                  class:list={[
+                    "group flex rounded-lg px-3 py-0.5 text-sm leading-6 transition-all",
+                    "text-secondary/65 hover:text-primary hover:bg-primary/5",
+                    heading.depth === 2 ? "font-medium" : "font-normal",
+                  ]}
+                >
+                  <span class="line-clamp-2">{heading.text}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </aside>
+  )
+}
+<script>
+  function setupTableOfContents() {
+    const root = document.querySelector("[data-toc-root]");
+    if (!(root instanceof HTMLElement) || root.dataset.bound === "true") return;
+    root.dataset.bound = "true";
+    const links = Array.from(root.querySelectorAll("[data-toc-link]")).filter(
+      (link) => link instanceof HTMLAnchorElement,
+    );
+    if (links.length === 0) return;
+
+    const sections = links
+      .map((link) => {
+        const slug = link.dataset.tocTarget;
+        if (!slug) return null;
+        const el = document.getElementById(slug);
+        return el instanceof HTMLElement ? el : null;
+      })
+      .filter((el) => el instanceof HTMLElement);
+    if (sections.length === 0) return;
+
+    const setActive = (id: string) => {
+      links.forEach((link) => {
+        const active = link.dataset.tocTarget === id;
+        link.classList.toggle("bg-primary/5", active);
+        link.classList.toggle("text-primary", active);
+        link.classList.toggle("font-semibold", active);
+        link.classList.toggle("text-secondary/65", !active);
+        if (active) {
+          link.setAttribute("aria-current", "location");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+
+    const updateActive = () => {
+      const offset = 160;
+      let activeId = sections[0]?.id;
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 2;
+      if (isAtBottom) {
+        activeId = sections[sections.length - 1]?.id;
+      } else {
+        sections.forEach((section) => {
+          if (section.getBoundingClientRect().top - offset <= 0) {
+            activeId = section.id;
+          }
+        });
+      }
+      if (activeId) {
+        setActive(activeId);
+      }
+    };
+
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
+  }
+  setupTableOfContents();
+  document.addEventListener("astro:page-load", setupTableOfContents);
+</script>

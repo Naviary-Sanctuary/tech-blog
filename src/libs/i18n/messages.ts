@@ -25,6 +25,7 @@ type ArticleMessage = {
 
 type PostMessage = {
   backToList: string;
+  tableOfContents:string;
   prevPost: string;
   nextPost: string;
 };
@@ -67,6 +68,7 @@ export const messages: Record<Locale, Messages> = {
       backToList: "목록으로",
       prevPost: "이전 게시글",
       nextPost: "다음 게시글",
+      tableOfContents: "목차",
     },
     openSource: {
       title: "Open Source",
@@ -99,6 +101,7 @@ export const messages: Record<Locale, Messages> = {
       backToList: "Back to List",
       prevPost: "Previous Article",
       nextPost: "Next Article",
+      tableOfContents: "On This Page"
     },
     openSource: {
       title: "Open Source",
