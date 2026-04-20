@@ -1,0 +1,46 @@
+# Naviary Tech Blog
+
+Naviary is a parrot breeding and management platform focused on building a structured, data-driven breeding system.
+Main site: https://naviary.io
+
+This blog shares engineering work behind Naviary, including software architecture, system design, migration lessons, and technical decisions.
+
+## Languages
+
+- [Korean Home](https://tech.naviary.io/ko/): Main homepage for Korean content
+- [English Home](https://tech.naviary.io/en/): Main homepage for English content
+
+## Article Indexes
+
+- [Korean Articles](https://tech.naviary.io/ko/articles/): Paginated list of Korean technical articles
+- [English Articles](https://tech.naviary.io/en/articles/): Paginated list of English technical articles
+
+## Feeds
+
+- [All Posts RSS](https://tech.naviary.io/rss.xml): Combined RSS feed for all published posts
+- [Korean RSS](https://tech.naviary.io/ko/rss.xml): RSS feed for Korean posts
+- [English RSS](https://tech.naviary.io/en/rss.xml): RSS feed for English posts
+
+## Open Source
+
+- [Korean Open Source](https://tech.naviary.io/ko/open-source/): Open source related information in Korean
+- [English Open Source](https://tech.naviary.io/en/open-source/): Open source related information in English
+
+## Discovery
+
+- [Sitemap](https://tech.naviary.io/sitemap.xml): Full list of published pages and posts
+
+## URL Patterns
+
+- Korean posts: `https://tech.naviary.io/ko/articles/post/{slug}/`
+- English posts: `https://tech.naviary.io/en/articles/post/{slug}/`
+
+## Notes
+
+- The root URL `https://tech.naviary.io/` may redirect by language preference. Prefer direct locale-specific URLs.
+- Published content is available through article index pages, RSS feeds, and the sitemap.
+
+## Content License
+
+- Content and public assets are licensed under CC BY-NC-ND 4.0 unless otherwise noted.
+- Code and configuration files are licensed under MIT.
