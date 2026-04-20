@@ -32,13 +32,16 @@ This blog shares engineering work behind Naviary, including software architectur
 
 ## URL Patterns
 
-- Korean posts: `https://tech.naviary.io/ko/articles/post/{slug}/`
-- English posts: `https://tech.naviary.io/en/articles/post/{slug}/`
+- Korean posts (HTML): `https://tech.naviary.io/ko/articles/post/{slug}/`
+- English posts (HTML): `https://tech.naviary.io/en/articles/post/{slug}/`
+- Korean posts (plain text): `https://tech.naviary.io/ko/articles/post/{slug}.txt`
+- English posts (plain text): `https://tech.naviary.io/en/articles/post/{slug}.txt`
 
 ## Notes
 
 - The root URL `https://tech.naviary.io/` may redirect by language preference. Prefer direct locale-specific URLs.
 - Published content is available through article index pages, RSS feeds, and the sitemap.
+- Plain text post endpoints are available for AI-friendly reading.
 
 ## Content License
 
