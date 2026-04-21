@@ -23,7 +23,7 @@ const schema = ({ image }: { image: (opts?: { inferSize?: boolean }) => any }) =
   // etc
   heroImage: image().optional(),
   draft: z.boolean().default(false),
-
+  pinned: z.boolean().default(false),
 })
 
 const koBlog = defineCollection({

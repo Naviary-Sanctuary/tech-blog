@@ -6,19 +6,28 @@ import { getCollection } from "astro:content";
 import Link from "../../../components/Link.astro";
 import Divider from "../../../components/Divider.astro";
 import Pagination from "../../../components/Pagination.astro";
+import PinnedIcon from "../../../components/icons/Pinned.astro";
 import { getMessages } from "../../../libs/i18n/messages";
 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 export const getStaticPaths = (async ({ paginate }) => {
-  const posts = (await getCollection("koBlog", ({ data }) => !data.draft)).sort(
+  const allPosts = (
+    await getCollection("koBlog", ({ data }) => !data.draft)
+  ).sort(
     (a, b) => new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf(),
   );
-
-  return paginate(posts, { pageSize: 5 });
+  const pinnedPost = allPosts.find((post) => post.data.pinned);
+  const regularPosts = allPosts.filter((post) => !post.data.pinned);
+  return paginate(regularPosts, {
+    pageSize: 5,
+    props: {
+      pinnedPost,
+    },
+  });
 }) satisfies GetStaticPaths;
 
-const { page } = Astro.props;
+const { page, pinnedPost } = Astro.props;
 const t = getMessages("ko").articles;
 ---
 
@@ -34,6 +43,39 @@ const t = getMessages("ko").articles;
     <Divider />
     <!-- Articles -->
     <div class="flex flex-col gap-8 mt-10">
+      {
+        pinnedPost && (
+          <Link
+            href={`/articles/post/${pinnedPost.id}`}
+            class="group block border-b border-b-secondary/15 -mx-3 px-3 py-4 transition-all duration-200 hover:bg-tertiary/2 hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary/60 active:scale-[0.998]"
+            aria-label={`${pinnedPost.data.title} 글 읽기`}
+          >
+            <article class="flex flex-col gap-3 sm:flex-row sm:gap-10">
+              <time
+                datetime={pinnedPost.data.date}
+                class="shrink-0 pt-1 w-fit whitespace-nowrap text-xs sm:text-sm tracking-wide text-zinc-500"
+              >
+                {pinnedPost.data.date}
+              </time>
+
+              <div class="flex flex-col gap-3">
+                <div class="flex justify-between">
+                  <div class="inline-flex w-fit items-center rounded-[4px] border border-zinc-300/70 px-2 py-0.5 text-[11px] font-medium tracking-wide text-secondary">
+                    {pinnedPost.data.category}
+                  </div>
+                  <PinnedIcon className="size-6 shrink-0" />
+                </div>
+                <h3 class="text-xl font-bold leading-snug text-zinc-900">
+                  {pinnedPost.data.title}
+                </h3>
+                <p class="text-sm sm:text-[15px] leading-7 text-secondary">
+                  {pinnedPost.data.description}
+                </p>
+              </div>
+            </article>
+          </Link>
+        )
+      }
       {
         page.data.map((post) => {
           return (
