@@ -1,0 +1,359 @@
+---
+title: "Astro. Amaze, Amaze, Amaze"
+description: "Why I chose Astro while rebuilding the tech blog, and how I reviewed the technology stack for it."
+date: "2026-05-14"
+category: "Frontend"
+tags: ["Astro", "Frontend", "Blog", "Static Site", "Naviary"]
+author: "naviary"
+heroImage: "../assets/astro-amaze-amaze-amaze/astro-logo.png"
+draft: false
+---
+
+import svelteLogo from "../assets/astro-amaze-amaze-amaze/svelte-logo.png";
+import pageSpeedResult from "../assets/astro-amaze-amaze-amaze/page-speed-result.png";
+
+## Introduction
+
+I recently watched `Project Hail Mary`, and I enjoyed it a lot. In the story, there is a microorganism called **Astrophage** that absorbs energy from stars, stores it as mass, and then converts that mass back into energy to travel at incredible speeds.
+
+I watched Project Hail Mary twice in theaters, once in IMAX. After coming home and thinking about it again, I realized, "My tech blog is built with Astro, but I still haven't written about that?"
+
+So I decided to write this post: why I separated the tech blog, and why I chose Astro as its technology stack.
+
+## A Breeding Center with a Tech Blog?
+
+I run a parrot breeding center, but I am also a developer. So I wanted a separate place to record what I am building, the technology stacks I considered, and the trial and error along the way.
+
+For more context, you may want to read [Records, Coordinates, and Direction: Why We Record Technology](record-coordinate-direction).
+
+When I first built the website, I had separated the blog menu on the [breeding center website](https://naviary.io) into parrot guides and tech posts as different endpoints.
+
+It was the simplest approach, and I thought it made sense to place those posts on the main website, where potential customers could most easily see how we work.
+
+But as I kept writing, I started to think that breeding-related posts and technical posts should probably be separated.
+
+People looking for parrot guides and people reading technical articles have different goals. Putting two different contexts in the same space can blur the UX for both sides. On top of that, the existing site added extra depth before readers could reach a blog post, which made the experience less convenient.
+
+## Choosing the Technology Stack
+
+Whenever I start a new project, I review the technology stack. Of course, choosing a familiar and stable stack is one valid approach, but I think I usually want to choose the best possible stack a little more strongly.
+
+The goal of the tech blog was clear from the beginning.
+
+> Build a clean, lightweight site that is not flashy, and deliver information to users accurately and quickly.
+
+At first, there were quite a few options I considered.
+
+1. Next.js
+2. SvelteKit
+3. Gatsby
+4. Astro
+
+There were other options too, such as Hugo, but the main candidates I thought about were those four.
+
+### 1. Next.js
+
+![Next.js](../assets/astro-amaze-amaze-amaze/nextjs-logo.png)
+
+The first thing that came to mind was, of course, Next.js. In the frontend ecosystem, it has almost become the standard in recent years. The existing breeding center website was also built with Next.js, and as someone who had mostly worked with React, it was the tool I was most familiar with.
+
+It has many features and offers a lot of support, which makes it convenient. However, unlike the main website, this tech blog did not need much interaction. Its purpose was simply to publish posts, so it did not need that many features.
+
+For a tech blog whose main job is to display Markdown posts cleanly and quickly, I felt that Next.js was a little too slow and heavy. So I started looking for alternatives.
+
+```typescript
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const filePath = path.join(process.cwd(), 'src/content', `${params.slug}.mdx`);
+  const source = await fs.readFile(filePath, 'utf8');
+
+  const { content, frontmatter } = await compileMDX<{ title: string }>({
+    source,
+    options: { parseFrontmatter: true }
+  });
+
+  return (
+    <article>
+      <h1>{frontmatter.title}</h1>
+      {content}
+    </article>
+  );
+}
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    Example Next.js code: find the file path and render Markdown through an external library.
+  </span>
+</div>
+
+### 2. SvelteKit
+
+<div className="my-8 flex justify-center">
+  <img
+    src={svelteLogo.src}
+    alt="Svelte"
+    width={svelteLogo.width}
+    height={svelteLogo.height}
+    className="w-32 sm:w-40 md:w-48 h-auto rounded-xl border border-zinc-200"
+  />
+</div>
+
+When I wondered whether there was a framework lighter than Next.js, the first one that came to mind was SvelteKit, an SSR/SSG framework based on Svelte. The code is simple, and compared with Next.js it is fairly lightweight, so it naturally came up when I felt Next.js was too heavy.
+
+But for what I wanted, I thought a static site would be enough. In that sense, Svelte still felt a little more application-oriented than what I needed.
+
+So I decided to think again, focusing more on SSG.
+
+```svelte
+<script>
+  export let data;
+</script>
+
+<article>
+  <h1>{data.frontmatter.title}</h1>
+  <svelte:component this={data.content} />
+</article>
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    Svelte example code: the code is concise.
+  </span>
+</div>
+
+### 3. Gatsby
+
+![Gatsby](../assets/astro-amaze-amaze-amaze/gatsby-logo.png)
+
+Gatsby may be one of the most famous static site frameworks. It is React-based, and one distinctive part is that it uses GraphQL for data handling.
+
+Personally, I liked that it was React-based because React was what I had used most. But GraphQL was a different story. In Gatsby, Markdown files are gathered and managed through a GraphQL data layer.
+
+Because my previous experience with GraphQL was not very good, I felt reluctant to choose it.
+
+```typescript
+export default function BlogPost({ data }) {
+  const post = data.mdx
+  return (
+    <article>
+      <h1>{post.frontmatter.title}</h1>
+      <MDXRenderer>{post.body}</MDXRenderer>
+    </article>
+  )
+}
+
+export const query = Graphql`
+  query($slug: String!) {
+    mdx(fields: { slug: { eq: $slug } }) {
+      body
+      frontmatter {
+        title
+      }
+    }
+  }
+`
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    Gatsby example code: load data through GraphQL.
+  </span>
+</div>
+
+### 4. Astro
+
+![Astro](../assets/astro-amaze-amaze-amaze/astro-logo.png)
+
+Astro was a framework I first discovered while rebuilding this tech blog. Its concept was clear.
+
+Minimal JavaScript, content collections, island architecture that only applies interactivity where needed, and several other ideas that looked good to me were all part of it.
+
+So I chose it.
+
+```astro
+---
+import { getCollection, render } from 'astro:content';
+
+const posts = await getCollection('blog');
+const post = posts.find((p) => p.slug === Astro.params.slug);
+const { Content } = await render(post);
+---
+
+<article>
+  <h1>{post.data.title}</h1>
+  <Content />
+</article>
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">Astro example code</span>
+</div>
+
+## So What Is Good About It?
+
+### Minimal JavaScript
+
+This was one of the things I liked most when choosing Astro. By default, Astro minimizes JavaScript by first building pages as static HTML, then attaching JavaScript only to the parts that truly need interaction.
+
+A tech blog is a place for reading. I thought it would be better to remove everything unnecessary for users who simply want to read an article. One reason I did not choose React or Next.js was that sometimes even the time spent downloading those bundles feels uncomfortable.
+
+Because there is no bundle to download, the page renders faster. And because Astro serves HTML by default, it is also advantageous for SEO.
+
+From a user's perspective, I thought this was better. Of course, JavaScript can still be used wherever it is needed, so there is no technical problem with that.
+
+### Dependencies
+
+From my personal experience, one nice thing was that it is easy to operate without many external dependencies. Of course, that does not mean there are no external dependencies at all.
+
+In my case, `tailwindcss` is included as an external dependency. At this point, since I use Tailwind in almost every project, my body has become more comfortable writing Tailwind than plain CSS.
+
+### Build Speed
+
+The build speed also became much faster. For the existing breeding center deployment, the average was around 40 seconds, while Astro usually finishes in the low 20-second range.
+
+<div className="flex items-center justify-center gap-2">
+  <div>![landing-build-time](../assets/astro-amaze-amaze-amaze/landing-build-time.png)</div>
+  <div>![tech-build-time](../assets/astro-amaze-amaze-amaze/tech-build-time.png)</div>
+</div>
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    Next.js deployment time / Astro deployment time
+  </span>
+</div>
+
+### Content Collections
+
+Astro has a feature called Content Collections.
+
+It validates frontmatter data types while loading MDX files. When writing blog posts, mistakes happen from time to time, and this makes them easy to catch during development.
+
+If you define the schema in the config file using Astro's built-in Zod, it automatically throws an error at build time and tells you what went wrong.
+
+```typescript
+import { defineCollection } from "astro:content";
+import { glob } from 'astro/loaders'
+import { z } from 'astro/zod'
+
+const schema = ({ image }: { image: (opts?: { inferSize?: boolean }) => any }) => z.object({
+  // basic information
+  title: z.string(),
+  description: z.string(),
+  author: z.string().default("Naviary"),
+
+  ...
+})
+
+const koBlog = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/ko" }),
+  schema,
+})
+
+const enBlog = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: "./src/content/en" }),
+  schema,
+})
+
+export const collections = { koBlog, enBlog }
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">content.config.ts</span>
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    You can choose where blog content lives through the glob pattern.
+  </span>
+</div>
+
+### Internationalization
+
+This tech blog is currently published in two languages, Korean and English. I think Astro also supports internationalized routing quite well.
+
+You can enable routing support by adding just a few lines to the Astro config file. It is very easy, which is nice.
+
+```mjs
+export default defineConfig({
+  ...
+  i18n: {
+    defaultLocale: 'ko',
+    locales: ['ko', 'en'],
+    routing: {
+      prefixDefaultLocale: true,
+      strategy: "prefix",
+    },
+  }
+});
+```
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">astro.config.mjs</span>
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    Internationalization setup is very easy.
+  </span>
+</div>
+
+## Any Downsides?
+
+Of course, there are downsides too.
+
+### Unfamiliar Syntax
+
+I am deeply soaked in React's JSX syntax. Because of that, using syntax closer to standard HTML again felt quite unfamiliar at first.
+
+Astro also lets you use script logic at the top of a file, separated by `---`, much like frontmatter in MDX.
+
+```astro
+---
+// If you declare a Props interface here, it defines the props this component receives.
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props
+---
+
+// Then comes the rendering syntax.
+<div>{title} : {description}</div>
+```
+
+Once you get used to it, I think it is fairly intuitive and convenient. Still, because I am so used to React, some parts felt confusing and uncomfortable at first.
+
+### Difficulty Applying Scripts
+
+To say it again, I am soaked in React. It has also been a very long time since I wrote scripts directly for HTML.
+
+So while building this tech blog, I struggled a bit when writing logic for things like the mobile menu button and the table of contents indicator that highlights the section currently being read.
+
+I did get help from AI, but I do not apply AI-written code unless I understand it myself. So I ended up seeing `querySelector`, `addEventListener`, and similar APIs again after a long time.
+
+It definitely took some time to read them because they felt unfamiliar.
+
+## Closing
+
+<div className="my-8 flex justify-center">
+  <img
+    src={pageSpeedResult.src}
+    alt="PageSpeed result"
+    width={pageSpeedResult.width}
+    height={pageSpeedResult.height}
+    className="w-100 sm:w-108 md:w-116 h-auto rounded-xl border border-zinc-200"
+  />
+</div>
+
+<div className="flex flex-col items-center justify-center text-center">
+  <span className="text-sm text-[hsl(215,15%,50%)] italic">
+    PageSpeed measurement. Mobile scores come out in the mid-80s.
+  </span>
+</div>
+
+While building the blog with Astro, I was briefly thrown off by having to use vanilla JavaScript again, but it also helped me revisit the fundamentals. And because it produced such good performance, I am very satisfied with the result.
+
+In the end, I think Astro helped me produce better results than the previous tools in areas like SEO and accessibility. When I look at the deployment speed and the loading speed when visiting the site, I feel pretty proud.
+
+This tech blog is currently open sourced on GitHub. If you need it, you can always take a look at the [source code](https://github.com/Naviary-Sanctuary/tech-blog).
+
+Just as the Hail Mary used Astrophage as fuel to reach its destination, I hope the fundamentals I strengthened by adopting Astro become good fuel for Naviary's journey as well.
+
+Finally, I will close this post by borrowing Rocky's expression from the movie.
+
+**Astro. Amaze, Amaze, Amaze👎**
