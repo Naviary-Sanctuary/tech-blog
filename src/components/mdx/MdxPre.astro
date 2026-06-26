@@ -10,3 +10,69 @@ const { class: className, ...rest } = Astro.props;
     "my-6 overflow-x-auto rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-[14px] leading-6",
     className,
   ]}><slot /></pre>
+
+<script>
+  const renderMermaidBlocks = async () => {
+    const blocks = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        'pre[data-language="mermaid"] > code, pre > code.language-mermaid',
+      ),
+    );
+
+    if (blocks.length === 0) return;
+
+    const { default: mermaid } = await import("mermaid");
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict",
+      fontFamily: "inherit",
+    });
+
+    await Promise.all(
+      blocks.map(async (block, index) => {
+        const pre = block.closest("pre");
+
+        if (!pre || pre.dataset.mermaidRendered === "true") return;
+
+        pre.dataset.mermaidRendered = "true";
+
+        try {
+          const { svg } = await mermaid.render(
+            `mermaid-${Date.now()}-${index}`,
+            block.textContent?.trim() ?? "",
+          );
+          const diagram = document.createElement("div");
+          diagram.className = "mermaid-diagram";
+          diagram.innerHTML = svg;
+          pre.replaceWith(diagram);
+        } catch (error) {
+          pre.dataset.mermaidRendered = "false";
+          console.error("Mermaid render failed", error);
+        }
+      }),
+    );
+  };
+
+  renderMermaidBlocks();
+  document.addEventListener("astro:page-load", renderMermaidBlocks);
+</script>
+
+<style>
+  :global(.mermaid-diagram) {
+    margin: 2.5rem 0;
+    overflow-x: auto;
+    border: 1px solid rgb(228 228 231);
+    border-radius: 0.75rem;
+    background: white;
+    padding: 1rem;
+  }
+
+  :global(.mermaid-diagram svg) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+</style>
